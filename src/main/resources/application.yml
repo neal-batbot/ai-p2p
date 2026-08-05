@@ -1,0 +1,76 @@
+spring:
+  application:
+    name: chip
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 512MB
+      max-request-size: 512MB
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_URL:jdbc:mysql://localhost:3306/chip?characterEncoding=utf-8&serverTimezone=Asia/Shanghai}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
+  mvc:
+    static-path-pattern: /static/**
+
+server:
+  port: ${SERVER_PORT:80}
+
+rsa:
+  public: ${RSA_PUBLIC_KEY:}
+  private: ${RSA_PRIVATE_KEY:}
+
+llm:
+  default-model: ${LLM_DEFAULT_MODEL:deepseek-v4-flash}
+  deepseek:
+    api-url: ${DEEPSEEK_API_URL:https://api.deepseek.com/v1/chat/completions}
+    api-key: ${DEEPSEEK_API_KEY:}
+    model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
+  volc:
+    api-url: ${VOLC_API_URL:https://ark.cn-beijing.volces.com/api/v3/chat/completions}
+    api-key: ${VOLC_API_KEY:}
+    model: ${VOLC_MODEL:deepseek-v3-2-251201}
+  gpt:
+    api-url: ${GPT_API_URL:https://api.942ai.com/v1/chat/completions}
+    api-key: ${GPT_API_KEY:}
+    model: ${GPT_MODEL:gpt-4o}
+
+mybatis:
+  mapper-locations: classpath:mappers/*.xml
+  type-aliases-package: com.babata.chip.repository.entity
+  configuration:
+    map-underscore-to-camel-case: true
+
+files:
+  path:
+    public-file-path: ${PUBLIC_FILE_PATH:./files/public/}
+    private-file-path: ${PRIVATE_FILE_PATH:./files/private/}
+    avatar-file-path: ${AVATAR_FILE_PATH:./files/avatar/}
+    album-raw-path: ${ALBUM_RAW_PATH:./files/album/raw/}
+    album-compress-path: ${ALBUM_COMPRESS_PATH:./files/album/compress/}
+    temp-file-path: ${TEMP_FILE_PATH:./files/temp/}
+    wechat-file-path: ${WECHAT_FILE_PATH:./files/wechat/}
+    pdf-file-path: ${PDF_FILE_PATH:./files/pdf/}
+  allow-type:
+    public-file-allowed-type: mp4, jpg, png, gif, txt, doc, pdf, mp3, jpeg, docx, ico, pptx, xls, xlsx, ppt, py, go, cpp, sql, exe, md, h5, rar, zip, 7z, jfif, apk, webp, db, bmp, html
+    private-file-allowed-type: mp4, jpg, png, gif, txt, doc, pdf, mp3, jpeg, docx, ico, pptx, xls, xlsx, ppt, py, go, cpp, sql, exe, md, h5, rar, zip, 7z, jfif, apk, webp, db, bmp, html
+    album-file-allowed-type: jpg, png, gif, jpeg, jfif, webp, bmp, ico
+    avatar-file-allowed-type: jpg, jpeg, png, gif, jfif, bmp, ico
+  permission:
+    public-file-upload-permission: true
+    public-file-download-permission: true
+
+alipay:
+  app-id: ${ALIPAY_APP_ID:}
+  private-key: ${ALIPAY_PRIVATE_KEY:}
+  public-key: ${ALIPAY_PUBLIC_KEY:}
+  gateway-url: ${ALIPAY_GATEWAY_URL:https://openapi.alipay.com/gateway.do}
+  gateway-dev-url: ${ALIPAY_GATEWAY_DEV_URL:https://openapi.alipaydev.com/gateway.do}
+  notify-url: ${ALIPAY_NOTIFY_URL:}
+  return-url: ${ALIPAY_RETURN_URL:}
+  charset: UTF-8
+  sign-type: RSA2
+  format: JSON

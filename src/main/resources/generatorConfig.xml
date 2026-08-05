@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE generatorConfiguration
+        PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+<generatorConfiguration>
+    <classPathEntry
+            location="C:\Users\Ivan\.m2\repository\com\mysql\mysql-connector-j\8.0.33\mysql-connector-j-8.0.33.jar"/>
+
+    <context id="MybatisGenerator" targetRuntime="MyBatis3">
+        <!--        <commentGenerator>-->
+        <!--            <property name="suppressDate" value="true"/>-->
+        <!--            <property name="suppressAllComments" value="true"/>-->
+        <!--        </commentGenerator>-->
+
+        <!-- 数据库连接信息 -->
+        <!-- Supply generator DB credentials through Maven properties or a local untracked config. -->
+        <jdbcConnection driverClass="com.mysql.cj.jdbc.Driver"
+                        connectionURL="${db.url}"
+                        userId="${db.username}" password="${db.password}">
+            <property name="nullCatalogMeansCurrent" value="true"/>
+        </jdbcConnection>
+
+        <!-- Java类型处理器 -->
+        <javaTypeResolver>
+            <property name="forceBigDecimals" value="false"/>
+        </javaTypeResolver>
+
+        <!-- 代码生成器 -->
+        <javaModelGenerator targetPackage="com.babata.chip.repository.entity" targetProject="src/main/java">
+            <property name="enableSubPackages" value="true"/>
+            <property name="trimStrings" value="true"/>
+        </javaModelGenerator>
+
+        <!-- DAO接口生成器 -->
+        <sqlMapGenerator targetPackage="mappers" targetProject="src/main/resources">
+            <property name="enableSubPackages" value="true"/>
+        </sqlMapGenerator>
+
+        <!-- DAO实现类生成器 -->
+        <javaClientGenerator type="XMLMAPPER" targetPackage="com.babata.chip.repository.mapper"
+                             targetProject="src/main/java">
+            <property name="enableSubPackages" value="true"/>
+        </javaClientGenerator>
+
+        <!-- 需要生成的表名 -->
+        <table tableName="article" domainObjectName="ArticleDO" mapperName="ArticleMapper">
+            <property name="interfaceName" value="ArticleMapper"/>
+            <generatedKey column="id" sqlStatement="MySql" identity="true"/>
+            <columnOverride column="content_md" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <columnOverride column="content_text" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <columnOverride column="content_html" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        </table>
+
+        <table tableName="sub_segment" domainObjectName="SubSegmentDO" mapperName="SubSegmentMapper">
+            <property name="interfaceName" value="SubSegmentMapper"/>
+            <generatedKey column="id" sqlStatement="MySql" identity="true"/>
+        </table>
+
+        <table tableName="major_segment" domainObjectName="MajorSegmentDO" mapperName="MajorSegmentMapper">
+            <property name="interfaceName" value="MajorSegmentMapper"/>
+            <generatedKey column="id" sqlStatement="MySql" identity="true"/>
+        </table>
+
+        <table tableName="bom" domainObjectName="BomDO" mapperName="BomMapper">
+            <property name="interfaceName" value="BomMapper"/>
+            <generatedKey column="id" sqlStatement="MySql" identity="true"/>
+        </table>
+
+        <table tableName="pin2pin" domainObjectName="Pin2PinDO" mapperName="Pin2PinMapper">
+            <property name="interfaceName" value="Pin2PinMapper"/>
+            <generatedKey column="id" sqlStatement="MySql" identity="true"/>
+        </table>
+
+        <table tableName="chip" domainObjectName="ChipDO" mapperName="ChipMapper">
+            <property name="interfaceName" value="ChipMapper"/>
+            <generatedKey column="id" sqlStatement="MySql" identity="true"/>
+            <columnOverride column="parameter" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        </table>
+
+        <table tableName="admin" domainObjectName="AdminDO" mapperName="AdminMapper">
+            <property name="interfaceName" value="AdminMapper"/>
+            <generatedKey column="id" sqlStatement="MySql" identity="true"/>
+        </table>
+
+        <table tableName="login" domainObjectName="LoginDO" mapperName="LoginMapper">
+            <property name="interfaceName" value="LoginMapper"/>
+            <generatedKey column="id" sqlStatement="MySql" identity="true"/>
+        </table>
+
+        <table tableName="visitor" domainObjectName="VisitorDO" mapperName="VisitorMapper">
+            <property name="interfaceName" value="VisitorMapper"/>
+            <generatedKey column="id" sqlStatement="MySql" identity="true"/>
+        </table>
+
+        <table tableName="session" domainObjectName="SessionDO" mapperName="SessionMapper">
+            <property name="interfaceName" value="SessionMapper"/>
+            <generatedKey column="id" sqlStatement="MySql" identity="true"/>
+        </table>
+
+        <table tableName="message" domainObjectName="MessageDO" mapperName="MessageMapper">
+            <property name="interfaceName" value="MessageMapper"/>
+            <generatedKey column="id" sqlStatement="MySql" identity="true"/>
+            <columnOverride column="content" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        </table>
+
+        <table tableName="chip_compare_record" domainObjectName="ChipCompareRecordDO"
+               mapperName="ChipCompareRecordMapper">
+            <property name="interfaceName" value="ChipCompareRecordMapper"/>
+            <generatedKey column="id" sqlStatement="MySql" identity="true"/>
+            <columnOverride column="prompt" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <columnOverride column="result" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        </table>
+
+        <table tableName="payment_order" domainObjectName="PaymentOrderDO" mapperName="PaymentOrderMapper">
+            <property name="interfaceName" value="PaymentOrderMapper"/>
+            <generatedKey column="id" sqlStatement="MySql" identity="true"/>
+        </table>
+
+        <table tableName="user_balance" domainObjectName="UserBalanceDO" mapperName="UserBalanceMapper">
+            <property name="interfaceName" value="UserBalanceMapper"/>
+            <generatedKey column="id" sqlStatement="MySql" identity="true"/>
+        </table>
+
+        <table tableName="balance_change_log" domainObjectName="BalanceChangeLogDO" mapperName="BalanceChangeLogMapper">
+            <property name="interfaceName" value="BalanceChangeLogMapper"/>
+            <generatedKey column="id" sqlStatement="MySql" identity="true"/>
+        </table>
+
+    </context>
+</generatorConfiguration>

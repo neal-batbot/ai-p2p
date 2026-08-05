@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="layouts/base :: head-common"/>
+    <link rel="stylesheet" th:href="@{/static/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/static/css/blog.css}">
+    <title>博客 | CHIP AI</title>
+</head>
+<body>
+<nav th:replace="layouts/base :: navbar"></nav>
+
+<main class="blog-page">
+    <section class="blog-hero">
+        <div class="blog-hero-content">
+            <span class="eyebrow">技术博客</span>
+            <h1>芯片替代与行业洞察</h1>
+            <p>深入了解国产替代、封装工艺与供应链趋势，获取工程师视角的分析解读。</p>
+            <div class="hero-actions">
+                <a href="#blog-list" class="btn btn-primary">浏览文章</a>
+                <a href="#categories" class="btn btn-outline">筛选分类</a>
+            </div>
+        </div>
+        <div class="hero-summary">
+            <div class="summary-card">
+                <h3>最新趋势</h3>
+                <p>每周更新热门领域的芯片替代策略与项目案例。</p>
+            </div>
+            <div class="summary-card">
+                <h3>专家观点</h3>
+                <p>结合一线工程师经验输出可执行的选型建议。</p>
+            </div>
+            <div class="summary-card">
+                <h3>行业数据</h3>
+                <p>结合供应链与库存数据建立真实可用的评估模型。</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="blog-content" id="blog-list">
+        <div class="blog-filters" id="categories"></div>
+        <div class="blog-grid" id="blog-grid">
+            <div class="loading-indicator">
+                <i class="fas fa-spinner"></i> 正在加载博客文章...
+            </div>
+        </div>
+        <div class="pagination" id="pagination"></div>
+    </section>
+</main>
+
+<footer th:replace="layouts/base :: footer"></footer>
+
+<th:block th:replace="layouts/base :: scripts-common"/>
+
+<script>
+    $(document).ready(function () {
+        let currentPage = 1;
+        let currentCategory = 'all';
+        const postsPerPage = 9;
+
+        const categories = [
+            {id: 'all', name: '全部'},
+            {id: 'domestic', name: '国产替代'},
+            {id: 'design', name: '设计技术'},
+            {id: 'manufacturing', name: '制造工艺'},
+            {id: 'automotive', name: '汽车电子'},
+            {id: 'ai', name: 'AI芯片'},
+            {id: 'trends', name: '行业趋势'}
+        ];
+
+        function fetchBlogPosts(page = 1, category = 'all') {
+            return new Promise((resolve) => {
+                const params = {
+                    page: page,
+                    pageSize: postsPerPage,
+                    tag: category === 'all' || category === '全部' ? null : category
+                };
+
+                $.ajax({
+                    url: '/api/article/posts',
+                    method: 'GET',
+                    data: params,
+                    dataType: 'json',
+                    success: function (response) {
+                        if (response.status === 0) {
+                            let totalPosts = response.total || 0;
+                            let totalPages = Math.ceil(totalPosts / postsPerPage);
+
+                            resolve({
+                                posts: response.data || [],
+                                totalPosts: totalPosts,
+                                totalPages: totalPages,
+                                currentPage: page,
+                                currentCategory: category
+                            });
+                        } else {
+                            showAlert('获取博客列表失败', 'error');
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        showAlert(`获取博客列表失败: ${xhr.responseJSON?.message || error}`, 'error');
+                    }
+                });
+            });
+        }
+
+        function showAlert(message, type = 'success') {
+            alert(`${type === 'success' ? '✓' : '✗'} ${message}`);
+        }
+
+        function renderCategories() {
+            const $filters = $('#categories');
+            $filters.empty();
+
+            categories.forEach(category => {
+                const activeClass = category.name === currentCategory ? 'active' : '';
+                $filters.append(
+                    `<button class="filter-btn ${activeClass}" data-category="${category.id}" data-category-name="${category.name}">${category.name}</button>`
+                );
+            });
+        }
+
+        function renderBlogPosts(posts) {
+            const $blogGrid = $('#blog-grid');
+
+            if (posts.length === 0) {
+                $blogGrid.html('<div class="no-results"><i class="fas fa-info-circle"></i> 没有找到相关文章</div>');
+                return;
+            }
+
+            $blogGrid.empty();
+
+            posts.forEach(post => {
+                $blogGrid.append(`
+                    <a href="/article/${post.enTitle}" class="blog-card">
+                        <div class="card-img">
+                            <img src="${post.coverImage}" alt="${post.title}">
+                            <div class="card-tag">${post.tag}</div>
+                        </div>
+                        <div class="card-content">
+                            <h3>${post.title}</h3>
+                            <p>${post.summary}</p>
+                            <div class="card-meta">
+                                <span><i class="far fa-calendar"></i> ${post.createTime}</span>
+                            </div>
+                        </div>
+                    </a>
+                `);
+            });
+        }
+
+        function renderPagination(totalPages, currentPage) {
+            const $pagination = $('#pagination');
+            $pagination.empty();
+
+            if (totalPages <= 1) return;
+
+            const prevDisabled = currentPage === 1 ? 'disabled' : '';
+            $pagination.append(`
+                <div class="page-btn ${prevDisabled}" data-page="${currentPage - 1}">
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+            `);
+
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, currentPage + 2);
+
+            for (let i = startPage; i <= endPage; i++) {
+                const activeClass = i === currentPage ? 'active' : '';
+                $pagination.append(`
+                    <div class="page-btn ${activeClass}" data-page="${i}">${i}</div>
+                `);
+            }
+
+            if (endPage < totalPages) {
+                $pagination.append(`
+                    <div class="page-btn disabled"><i class="fas fa-ellipsis-h"></i></div>
+                    <div class="page-btn" data-page="${totalPages}">${totalPages}</div>
+                `);
+            }
+
+            const nextDisabled = currentPage === totalPages ? 'disabled' : '';
+            $pagination.append(`
+                <div class="page-btn ${nextDisabled}" data-page="${currentPage + 1}">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            `);
+        }
+
+        async function loadBlogData(page = 1, category = 'all') {
+            $('#blog-grid').html('<div class="loading-indicator"><i class="fas fa-spinner"></i> 正在加载博客文章...</div>');
+            try {
+                renderCategories();
+
+                const data = await fetchBlogPosts(page, category);
+                currentPage = data.currentPage;
+                currentCategory = data.currentCategory;
+                renderBlogPosts(data.posts);
+                renderCategories();
+
+                renderPagination(data.totalPages, data.currentPage);
+
+            } catch (error) {
+                console.log(error);
+                $('#blog-grid').html(`
+                    <div class="no-results">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>加载失败，请稍后再试</p>
+                        <button class="btn btn-primary" id="retry-btn">重新加载</button>
+                    </div>
+                `);
+
+                $('#retry-btn').click(() => loadBlogData());
+            }
+        }
+
+        loadBlogData();
+
+        $(document).on('click', '.filter-btn', function () {
+            const category = $(this).data('category-name');
+            loadBlogData(1, category);
+        });
+
+        $(document).on('click', '.page-btn:not(.disabled)', function () {
+            const page = $(this).data('page');
+            if (page) {
+                loadBlogData(page, currentCategory);
+            }
+        });
+    });
+</script>
+</body>
+</html>

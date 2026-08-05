@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="layouts/base :: head-common"/>
+    <link rel="stylesheet" th:href="@{/static/css/search.css}">
+    <title>智能搜索 | CHIP AI</title>
+</head>
+<body>
+<nav th:replace="layouts/base :: navbar"></nav>
+
+<main class="search-page">
+    <section class="search-hero">
+        <div class="search-hero-content">
+            <span class="eyebrow">智能检索</span>
+            <h1>快速定位芯片型号与替代方案</h1>
+            <p>输入料号或厂商关键词，实时检索数据库与网络资源，找到可靠的 Pin2Pin 备选。</p>
+        </div>
+        <div class="search-panel">
+            <div class="search-field">
+                <input
+                    type="text"
+                    id="searchInput"
+                    list="fuzzy_list"
+                    oninput="input_change()"
+                    placeholder="输入芯片型号或厂商关键词"
+                    aria-label="Search chips"
+                >
+                <datalist id="fuzzy_list"></datalist>
+            </div>
+            <button class="btn btn-primary" onclick="search()" aria-label="Search">
+                立即搜索
+            </button>
+        </div>
+        <div class="search-tags">
+            <span>热门搜索：</span>
+            <button type="button" class="tag" onclick="fillSearch('STM32')">STM32</button>
+            <button type="button" class="tag" onclick="fillSearch('AD7606')">AD7606</button>
+            <button type="button" class="tag" onclick="fillSearch('TPS610')">TPS610</button>
+        </div>
+    </section>
+
+    <section class="search-results-layout">
+        <div class="results-panel" id="searchResults" aria-live="polite" aria-atomic="true">
+            <h2 class="results-header">搜索结果</h2>
+            <p class="results-placeholder">输入关键词后，系统将展示匹配芯片清单与推荐方案。</p>
+        </div>
+
+        <aside class="network-panel" aria-label="Network search results">
+            <div class="network-header">
+                <h3>网络情报</h3>
+                <span>实时抓取行业公开数据</span>
+            </div>
+            <div id="networkContent">
+                <p class="network-placeholder">输入关键词后显示网络搜索结果。</p>
+            </div>
+        </aside>
+    </section>
+</main>
+
+<footer th:replace="layouts/base :: footer"></footer>
+
+<th:block th:replace="layouts/base :: scripts-common"/>
+
+<script>
+    (function initSearch() {
+        const params = new URLSearchParams(window.location.search);
+        const keyword = params.get("content");
+
+        if (keyword) {
+            $("#searchInput").val(keyword);
+            performSearch(keyword);
+            fetchNetworkResults(keyword);
+        }
+    })();
+
+    function fillSearch(term) {
+        $("#searchInput").val(term);
+        search();
+    }
+
+    function search() {
+        const keyword = document.getElementById("searchInput").value.trim();
+        if (!keyword) {
+            return;
+        }
+
+        const newUrl = new URL(window.location);
+        newUrl.searchParams.set('content', keyword);
+        window.history.pushState({}, '', newUrl);
+
+        performSearch(keyword);
+        fetchNetworkResults(keyword);
+    }
+
+    function performSearch(keyword) {
+        $.ajax({
+            url: "/api/chip/search?keyword=" + encodeURIComponent(keyword),
+            type: "GET",
+            dataType: "json",
+            beforeSend: function() {
+                showLoadingState();
+            },
+            success: function (data) {
+                if (data.status === 0) {
+                    if (data.data && data.data.chips) {
+                        showChips(data.data.chips, keyword);
+                    } else {
+                        showNoResults(keyword);
+                    }
+                } else {
+                    showError('查询失败，请稍后再试。');
+                }
+            },
+            error: function() {
+                showError('网络请求失败，请检查连接。');
+            }
+        });
+    }
+
+    function showChips(chips, query) {
+        const resultsContainer = document.getElementById("searchResults");
+
+        if (!chips || chips.length === 0) {
+            showNoResults(query);
+            return;
+        }
+
+        resultsContainer.innerHTML = `
+            <h2 class="results-header">
+                "${escapeHtml(query)}" 的搜索结果
+                <span class="results-count">共 ${chips.length} 条</span>
+            </h2>
+        `;
+
+        chips.forEach((chip, index) => {
+            const accentClass = ['text-orange', 'text-blue', 'text-green'][index % 3];
+            const item = document.createElement("div");
+            item.className = "result-item";
+            item.setAttribute('role', 'article');
+            item.setAttribute('tabindex', '0');
+            item.innerHTML = `
+                <p>
+                    <span class="result-label">型号</span>
+                    <strong class="${accentClass}">${escapeHtml(chip.partNumber)}</strong>
+                </p>
+                <p>
+                    <span class="result-label">厂商</span>
+                    <span class="result-value">${escapeHtml(chip.manufacturer)}</span>
+                </p>
+                <p>
+                    <span class="result-label">描述</span>
+                    ${escapeHtml(chip.description)}
+                </p>
+                ${chip.sheetUrl ? `
+                    <p>
+                        <span class="result-label">数据表</span>
+                        <a href="${escapeHtml(chip.sheetUrl)}" target="_blank" rel="noopener" class="result-link">
+                            查看 Datasheet
+                        </a>
+                    </p>
+                ` : ''}
+            `;
+
+            item.onclick = () => window.location.href = `/chip/detail?id=${chip.id}`;
+            item.onkeypress = (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    window.location.href = `/chip/detail?id=${chip.id}`;
+                }
+            };
+
+            resultsContainer.appendChild(item);
+        });
+    }
+
+    function showNoResults(query) {
+        const resultsContainer = document.getElementById("searchResults");
+        resultsContainer.innerHTML = `
+            <h2 class="results-header">未找到 "${escapeHtml(query)}" 的结果</h2>
+            <div class="result-item result-empty">
+                <p>请尝试更换关键词或检查拼写。</p>
+            </div>
+        `;
+    }
+
+    function showLoadingState() {
+        const resultsContainer = document.getElementById("searchResults");
+        resultsContainer.innerHTML = `
+            <h2 class="results-header">检索中...</h2>
+            <div class="result-item result-empty">
+                <div class="loading"></div>
+                <p>正在加载芯片结果</p>
+            </div>
+        `;
+    }
+
+    function showError(message) {
+        const resultsContainer = document.getElementById("searchResults");
+        resultsContainer.innerHTML = `
+            <h2 class="results-header">出现错误</h2>
+            <div class="result-item result-error">
+                <p>${escapeHtml(message)}</p>
+            </div>
+        `;
+    }
+
+    function fetchNetworkResults(keyword) {
+        const networkContent = document.getElementById("networkContent");
+        networkContent.innerHTML = `
+            <div class="network-loading">
+                <div class="loading"></div>
+                <p>正在抓取网络结果...</p>
+            </div>
+        `;
+
+        $.ajax({
+            url: "/api/chip/network/search?query=" + encodeURIComponent(keyword),
+            type: "GET",
+            dataType: "json",
+            success: function (data) {
+                if (data.status === 0 && data.results && data.results.length > 0) {
+                    showNetworkResults(data.results);
+                } else {
+                    networkContent.innerHTML = `<p class="network-placeholder">暂无网络结果</p>`;
+                }
+            },
+            error: function() {
+                networkContent.innerHTML = `<p class="network-placeholder">网络检索暂不可用</p>`;
+            }
+        });
+    }
+
+    function showNetworkResults(results) {
+        const networkContent = document.getElementById("networkContent");
+        networkContent.innerHTML = results.map((item, index) => {
+            const accentClass = ['text-green', 'text-blue', 'text-orange'][index % 3];
+            return `
+                <div class="network-item">
+                    <p class="network-title ${accentClass}">${escapeHtml(item.title)}</p>
+                    <p class="network-desc">${escapeHtml(item.description || '')}</p>
+                    ${item.url ? `<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener" class="network-link">查看详情</a>` : ''}
+                </div>
+            `;
+        }).join('');
+    }
+
+    function input_change() {
+        const keyword = document.getElementById("searchInput").value.trim();
+        if (!keyword) {
+            document.getElementById("fuzzy_list").innerHTML = '';
+            return;
+        }
+
+        $.ajax({
+            url: "/api/chip/search/fuzzy?keyword=" + encodeURIComponent(keyword),
+            type: "GET",
+            dataType: "json",
+            success: function (data) {
+                if (data.status === 0 && data.data) {
+                    const options = data.data.map(item => `<option value="${escapeHtml(item)}"></option>`).join('');
+                    document.getElementById("fuzzy_list").innerHTML = options;
+                }
+            }
+        });
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text || '';
+        return div.innerHTML;
+    }
+</script>
+</body>
+</html>

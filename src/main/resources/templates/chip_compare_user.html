@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="layouts/base :: head-common"/>
+    <link rel="stylesheet" th:href="@{/static/css/chip/chip_compare_user.css(v=20260805-3)}">
+    <title>Pin2Pin 芯片替代分析 | CHIP AI</title>
+</head>
+<body>
+<nav th:replace="layouts/base :: navbar"></nav>
+
+<main class="app-shell">
+    <section class="workspace">
+        <section class="workspace-intro" aria-labelledby="page-title">
+            <div class="intro-title-group">
+                <p class="eyebrow"><span></span>CHIP AI · PIN2PIN ANALYSIS</p>
+                <h1 id="page-title">Pin2Pin <em>替代分析</em></h1>
+                <p class="intro-copy">上传两份 PDF 数据表，生成可追溯的引脚、性能与风险对比结论。</p>
+            </div>
+            <div class="intro-status" aria-label="当前分析要求">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7 10 17l-5-5"/></svg>
+                需要两份 PDF 数据表
+            </div>
+        </section>
+
+        <div class="workbench-grid">
+            <aside class="control-panel" aria-label="分析设置">
+                <div class="panel-heading">
+                    <span class="step-number">01</span>
+                    <div><p>INPUT</p><h2>上传与配置</h2></div>
+                </div>
+
+                <section class="control-section upload-section" aria-labelledby="upload-title">
+                    <div class="section-label"><span id="upload-title">芯片数据表</span><small>PDF · 最多 2 个</small></div>
+                    <label class="upload-dropzone" for="file-upload">
+                        <input type="file" id="file-upload" multiple accept=".pdf">
+                        <span class="upload-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V3M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg></span>
+                        <span class="upload-primary">选择 PDF 数据表</span><span class="upload-secondary">或拖放文件到这里</span>
+                    </label>
+                    <ul class="file-list" aria-live="polite"></ul>
+                </section>
+
+                <section class="control-section" aria-labelledby="format-title">
+                    <div class="section-label"><span id="format-title">输出格式</span><small>至少选择一种</small></div>
+                    <div class="format-options">
+                        <label class="format-option active"><input type="checkbox" value="markdown" class="format" checked><span>Markdown</span></label>
+                        <label class="format-option"><input type="checkbox" value="json" class="format"><span>JSON</span></label>
+                        <label class="format-option"><input type="checkbox" value="excel" class="format"><span>Excel</span></label>
+                    </div>
+                </section>
+
+                <section class="control-section processing-control" aria-labelledby="stream-title">
+                    <div class="stream-copy"><span id="stream-title">流式输出</span><small>边生成边查看分析内容</small></div>
+                    <label class="switch" aria-label="开启流式输出"><input type="checkbox" id="streaming-checkbox" checked><span class="switch-track"></span></label>
+                </section>
+
+                <div class="analysis-action">
+                    <button class="analyze-btn" disabled type="button">
+                        <span class="button-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m14 6 4 4-4 4"/><path d="M6 18V6h8"/></svg></span>
+                        <span class="button-text">开始分析</span><span class="button-spinner" aria-hidden="true"></span>
+                    </button>
+                    <p class="action-hint">上传两份数据表后即可开始</p>
+                </div>
+                <div class="progress-bar" aria-label="分析进度"><div class="progress"></div></div>
+            </aside>
+
+            <section class="result-container" aria-label="分析工作区">
+                <div class="result-toolbar">
+                    <div class="panel-heading"><span class="step-number">02</span><div><p>OUTPUT</p><h2>分析工作区</h2></div></div>
+                    <div class="analysis-indicator"><span></span><span class="analysis-indicator-text">等待分析</span></div>
+                </div>
+                <div class="tab-header" role="tablist" aria-label="分析结果视图">
+                    <button class="tab-item active" type="button" role="tab" aria-selected="true" data-tab="markdown"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h10l4 4v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5Z"/><path d="M14 3v5h5M8 13h8M8 17h6"/></svg>Markdown 编辑</button>
+                    <button class="tab-item" type="button" role="tab" aria-selected="false" data-tab="report"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V5m0 14h16M8 15v-3m4 3V8m4 7v-5"/></svg>分析报告</button>
+                    <button class="tab-item" type="button" role="tab" aria-selected="false" data-tab="recent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/><path d="M12 7v5l3 2"/></svg>最近记录</button>
+                </div>
+                <div class="tab-content">
+                    <div class="tab-pane active" id="markdown-panel" role="tabpanel">
+                        <iframe id="md-editor-frame" src="/md/index.html" title="doocs Markdown 编辑器"></iframe>
+                        <p class="editor-note">分析完成后，报告会同步到编辑器。可继续调整排版或导出。</p>
+                    </div>
+                    <div class="tab-pane" id="report-panel" role="tabpanel"><div class="empty-report"><span class="empty-report-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M4.2 4.2 7 7m10 10 2.8 2.8M3 12h4m10 0h4M4.2 19.8 7 17m10-10 2.8-2.8"/><circle cx="12" cy="12" r="5"/></svg></span><h3>准备开始一份新的分析</h3><p>上传两份 PDF 数据表后，系统会在这里实时呈现分析过程与结论。</p></div></div>
+                    <div class="tab-pane" id="recent-panel" role="tabpanel"><div class="empty-report"><h3>加载最近记录</h3><p>切换到此标签后，将显示近期已完成的芯片对比分析。</p></div></div>
+                </div>
+            </section>
+        </div>
+        <textarea id="content_hidden" hidden></textarea>
+    </section>
+</main>
+
+<th:block th:replace="layouts/base :: scripts-common"/>
+<script src="https://cdn.jsdelivr.net/npm/marked@3.0.7/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script src="/static/js/chip/chip_compare_user.js"></script>
+</body>
+</html>

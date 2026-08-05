@@ -1,0 +1,221 @@
+/*
+ * Login Page Styles
+ */
+
+.login-page {
+    padding: 140px 24px 80px;
+    background: radial-gradient(circle at 15% 20%, rgba(217, 119, 87, 0.12), transparent 45%),
+        radial-gradient(circle at 85% 10%, rgba(106, 155, 204, 0.12), transparent 50%),
+        linear-gradient(180deg, var(--bg-primary), var(--bg-tertiary));
+    position: relative;
+    overflow: hidden;
+}
+
+.login-page::after {
+    content: "";
+    position: absolute;
+    top: 40%;
+    right: -120px;
+    width: 280px;
+    height: 280px;
+    border-radius: 50%;
+    background: rgba(120, 140, 93, 0.12);
+    filter: blur(0);
+}
+
+.login-grid {
+    max-width: 1120px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 48px;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+.login-hero .eyebrow {
+    display: inline-flex;
+    padding: 6px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--border-color);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent-orange);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 20px;
+    background-color: var(--bg-tertiary);
+}
+
+.login-hero h1 {
+    font-size: clamp(2.2rem, 3vw, 3rem);
+    margin-bottom: 16px;
+}
+
+.login-hero p {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin-bottom: 28px;
+}
+
+.login-highlights {
+    display: grid;
+    gap: 16px;
+}
+
+.highlight-card {
+    background-color: var(--bg-primary);
+    border-radius: 16px;
+    padding: 18px 20px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 12px 24px rgba(20, 20, 19, 0.06);
+}
+
+.highlight-card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+}
+
+.highlight-card p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.login-panel {
+    background: var(--bg-primary);
+    border-radius: 24px;
+    padding: 32px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 20px 40px rgba(20, 20, 19, 0.08);
+}
+
+.login-panel-header h2 {
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+}
+
+.login-panel-header p {
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+}
+
+.login-form {
+    display: grid;
+    gap: 16px;
+}
+
+.form-label {
+    font-size: 14px;
+    font-weight: 600;
+    font-family: var(--font-heading);
+    color: var(--text-primary);
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-tertiary);
+    font-size: 15px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--accent-orange);
+    box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.15);
+}
+
+.form-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.checkbox input {
+    accent-color: var(--accent-orange);
+}
+
+.form-helper {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.login-submit {
+    width: 100%;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 15px;
+    padding: 14px;
+}
+
+.form-message {
+    min-height: 24px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-message.is-error {
+    color: #c0392b;
+}
+
+.form-message.is-success {
+    color: #2d6a4f;
+}
+
+.form-message.is-loading {
+    color: var(--accent-blue);
+}
+
+.form-message-spinner {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid rgba(106, 155, 204, 0.3);
+    border-top-color: var(--accent-blue);
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 960px) {
+    .login-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .login-panel {
+        order: -1;
+    }
+}
+
+@media (max-width: 640px) {
+    .login-page {
+        padding-top: 120px;
+    }
+
+    .login-panel {
+        padding: 24px;
+    }
+}

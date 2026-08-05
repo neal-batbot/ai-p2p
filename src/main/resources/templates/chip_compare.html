@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能芯片 Pin2Pin 替代分析助手</title>
+    <!--    <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/6.4.0/css/all.min.css">-->
+    <link rel="stylesheet" href="/static/css/chip/chip_compare.css">
+    <link rel="stylesheet" href="/static/css/editormd.min.css">
+</head>
+<body>
+<!-- 侧边栏 -->
+<div class="sidebar">
+    <h2>🛠️ 分析设置</h2>
+    <!-- API 选择 -->
+    <h3>💻 大模型API选择</h3>
+    <div class="api-input">
+        <!--        <label><input type="radio" name="api" value="deepseek" checked> DeepSeek API</label>-->
+        <!--        <label><input type="radio" name="api" value="openai"> OpenAI API</label>-->
+        <div class="api-model-selection">
+            <label for="apiModelDropdown">选择API模型:</label>
+            <select id="apiModelDropdown" class="styled-dropdown">
+                <option value="deepseek-v4-flash" selected>DeepSeek V4 Flash（推荐）</option>
+                <option value="deepseek-v4-pro">DeepSeek V4 Pro</option>
+                <option value="gpt-4o">openai-gpt4o</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- 输出格式 -->
+    <h3>📊 输出格式</h3>
+    <div class="output-format">
+        <label><input type="checkbox" value="markdown" class="format" checked> Markdown</label>
+        <label><input type="checkbox" value="json" class="format"> JSON</label>
+        <label><input type="checkbox" value="excel" class="format"> Excel</label>
+    </div>
+
+    <!-- Prompt 输入框 -->
+    <div class="prompt-input">
+        <label for="prompt-text"><strong>🔍 Prompt</strong></label>
+        <textarea id="prompt-text" rows="20" placeholder="在此输入分析使用的 Prompt..."
+                  style="width: 100%; resize: none; padding: 10px; border-radius: 5px; border: 1px solid #ddd; text-align: left">
+        </textarea>
+    </div>
+
+    <!-- Temperature 填写框 -->
+    <div class="temperature-input">
+        <label for="temperature"><strong>🌡️ Temperature</strong></label>
+        <input type="number" id="temperature" value="0.3" min="0" max="1" step="0.1"
+               style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ddd; margin-bottom: 10px;">
+    </div>
+
+    <!-- Max Tokens 填写框 -->
+    <div class="max-tokens-input">
+        <label for="max-tokens"><strong>🧮 Max Tokens</strong></label>
+        <input type="number" id="max-tokens" value="8192" min="1" step="1"
+               style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ddd; margin-bottom: 10px;">
+    </div>
+
+    <!-- 添加流式传输选项 -->
+    <div class="streaming-option">
+        <label>
+            <input type="checkbox" id="streaming-checkbox" checked>
+            <strong>🌊 流式传输</strong>
+        </label>
+    </div>
+
+    <hr>
+    <h3>📌 关于</h3>
+    <p>支持硬件工程师快速进行 Pin2Pin 替代分析，上传芯片 PDF 自动生成结果。</p>
+</div>
+
+<!-- 主内容区 -->
+<div class="main-content">
+    <h1 class="main-header">🔧 智能芯片 Pin2Pin 对比分析助手</h1>
+    <h2 class="sub-header">📤 上传芯片数据表</h2>
+
+    <!-- 上传文件区域 -->
+    <div class="upload-area">
+        <input type="file" id="file-upload" multiple accept=".pdf">
+        <div class="file-list"></div>
+    </div>
+
+    <!-- 分析按钮 -->
+    <button class="analyze-btn" disabled>
+        <span class="button-text">🔍 开始分析</span>
+        <i class="fa fa-spinner fa-spin" style="display: none; margin-left: 5px;"></i>
+    </button>
+
+    <!-- 进度条 -->
+    <div class="progress-bar">
+        <div class="progress"></div>
+    </div>
+
+    <!-- 结果显示 -->
+    <div class="result-container">
+        <!-- Tab 标题 -->
+        <div class="tab-header">
+            <button class="tab-item active" data-tab="markdown">Markdown编辑</button>
+            <button class="tab-item" data-tab="report">分析报告</button>
+            <button class="tab-item" data-tab="recent">最近分析记录</button>
+        </div>
+
+        <!-- Tab 内容 -->
+        <div class="tab-content">
+            <!-- Markdown编辑区域 -->
+            <div class="tab-pane active" id="markdown-panel">
+                <div id="content-editor"></div>
+            </div>
+
+            <!-- 分析报告内容 -->
+            <div class="tab-pane" id="report-panel">
+                <p>这里是分析报告内容。</p>
+            </div>
+
+            <!-- 最近调用结果内容 -->
+            <div class="tab-pane" id="recent-panel">
+                <p>这里是最近分析历史结果列表。</p>
+            </div>
+        </div>
+    </div>
+
+    <textarea style="display:none;" id="content_hidden"></textarea>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@3.0.7/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+
+<script src="/static/js/editormd.min.js"></script>
+<script src="/static/js/chip/chip_compare.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,462 @@
+package com.babata.chip.service;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.babata.chip.common.UserCache;
+import com.babata.chip.common.UserContext;
+import com.babata.chip.common.enums.ChipCompareStatusEnum;
+import com.babata.chip.common.enums.StatusEnum;
+import com.babata.chip.common.request.ChipAnalyzeRequest;
+import com.babata.chip.common.response.LlmStreamResponse;
+import com.babata.chip.common.response.deepseek.DeepSeekResponse;
+import com.babata.chip.common.result.ChipPdfResult;
+import com.babata.chip.repository.MessageRepository;
+import com.babata.chip.repository.SessionRepository;
+import com.babata.chip.repository.entity.ChipCompareRecordDO;
+import com.babata.chip.util.PDFProcessor;
+import jakarta.annotation.Resource;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+
+@Service
+public class ChipAnalyzeService {
+    private static final Logger logger = LoggerFactory.getLogger(ChipAnalyzeService.class);
+
+    @Resource
+    private PDFProcessor pdfProcessor;
+
+    @Resource
+    private SessionRepository sessionRepository;
+
+    @Resource
+    private MessageRepository messageRepository;
+
+    @Resource
+    private ChipCompareRecordService chipCompareRecordService;
+
+    @Resource
+    private ChipLibraryService chipLibraryService;
+
+    // LLM 供应商配置（application.yml 中的 llm 段，支持环境变量覆盖）
+    @Value("${llm.default-model:deepseek-v4-flash}")
+    private String defaultModel;
+
+    @Value("${llm.deepseek.api-url:https://api.deepseek.com/v1/chat/completions}")
+    private String deepSeekApiUrl;
+
+    @Value("${llm.deepseek.api-key:}")
+    private String deepSeekApiKey;
+
+    @Value("${llm.deepseek.model:deepseek-v4-flash}")
+    private String deepSeekModel;
+
+    @Value("${llm.volc.api-url:https://ark.cn-beijing.volces.com/api/v3/chat/completions}")
+    private String volcApiUrl;
+
+    @Value("${llm.volc.api-key:}")
+    private String volcApiKey;
+
+    @Value("${llm.volc.model:deepseek-v3-2-251201}")
+    private String volcModel;
+
+    @Value("${llm.gpt.api-url:https://api.942ai.com/v1/chat/completions}")
+    private String gptApiUrl;
+
+    @Value("${llm.gpt.api-key:}")
+    private String gptApiKey;
+
+    @Value("${llm.gpt.model:gpt-4o}")
+    private String gptModel;
+
+    public static final String DEFAULT_SYSTEM_PROMPT = "You are an expert chip analysis engineer";
+    public static final Float DEFAULT_TEMPERATURE = 0.3f;
+    public static final Integer DEFAULT_MAX_TOKENS = 8192;
+
+    private static final String HISTORY_CONTEXT_TEMPLATE = """
+            \n\n# 📚 历史分析参考（来自历史对比记录库）\n\n以下是对应芯片的历史分析摘要，请参考它们保持结论一致性：\n\n%s""";
+
+    /**
+     * 根据芯片型号检索历史对比记录，构建历史参考上下文。
+     */
+    private String buildHistoryContext(List<String> chipPartNumberList) {
+        if (CollectionUtils.isEmpty(chipPartNumberList)) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        Set<Integer> seen = new HashSet<>();
+        for (String pn : chipPartNumberList) {
+            if (StringUtils.isBlank(pn)) {
+                continue;
+            }
+            List<ChipCompareRecordDO> recs = chipCompareRecordService.getRecentRecordsByPartNumber(pn, 3);
+            for (ChipCompareRecordDO r : recs) {
+                if (!seen.add(r.getId())) {
+                    continue;
+                }
+                String result = r.getResult() != null ? r.getResult() : "";
+                String summary = result.length() > 400 ? result.substring(0, 400) : result;
+                sb.append("- [记录#").append(r.getId()).append("] ")
+                        .append(r.getFirstChipPartNumber()).append(" ↔ ").append(r.getSecondChipPartNumber())
+                        .append(" (").append(r.getModel()).append("): ").append(summary).append("\n");
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 在 user prompt 尾部追加历史参考上下文（无历史时原样返回）。
+     */
+    private String appendHistoryContext(String userPrompt, List<String> chipPartNumberList) {
+        String history = buildHistoryContext(chipPartNumberList);
+        if (history.isEmpty()) {
+            return userPrompt;
+        }
+        return userPrompt + String.format(HISTORY_CONTEXT_TEMPLATE, history);
+    }
+
+    public void analyzeWithStream(SseEmitter emitter, ChipAnalyzeRequest chipAnalyzeRequest, UserContext userContext) throws IOException, InterruptedException {
+        Integer userId = userContext.getUserid();
+        fillDefaultParams(chipAnalyzeRequest);
+
+        // 解析pdf
+        long t1 = System.currentTimeMillis();
+        StringBuilder totalResult = new StringBuilder();
+        List<String> chipPartNumberList = new ArrayList<>();
+        List<String> fileList = new ArrayList<>();
+        List<ChipPdfResult> pdfResultList = new ArrayList<>();
+        try {
+            chipPartNumberList = chipAnalyzeRequest.getChipPartNumberList();
+            fileList = chipAnalyzeRequest.getFileList();
+            pdfResultList = pdfProcessor.processMultiplePdfs(fileList, chipPartNumberList);
+
+        } catch (Exception e) {
+            logger.error("analyzeWithStream, process pdf error", e);
+            long t2 = System.currentTimeMillis();
+            chipCompareRecordService.addRecord(userId, chipPartNumberList.get(0), chipPartNumberList.get(1), fileList.toString(), ChipCompareStatusEnum.PDF_PROCESS_ERROR.getCode(), "", "",
+                    chipAnalyzeRequest.getModelName(), 0, 0, 0, Math.toIntExact(t2 - t1), totalResult.toString());
+            // sse异常结束
+            LlmStreamResponse streamResponse = new LlmStreamResponse("error", e.getMessage());
+            String j = JSON.toJSONString(streamResponse);
+            emitter.send(j);
+            emitter.complete();
+            return;
+        }
+
+        long t2 = System.currentTimeMillis();
+
+        // 芯片库沉淀：把本次分析的芯片录入 chip 表
+        try {
+            chipLibraryService.recordChips(pdfResultList);
+        } catch (Exception e) {
+            logger.error("record chips to library error", e);
+        }
+
+        // 创建session
+        Long sessionId = sessionRepository.createSession(Long.valueOf(userId), "pin2pin compare analyze: " + fileList, UUID.randomUUID().toString());
+        String userPrompt = buildUserPrompt(pdfResultList, chipAnalyzeRequest.getUserPrompt());
+        userPrompt = appendHistoryContext(userPrompt, chipPartNumberList);
+        messageRepository.addMessage(sessionId, Long.valueOf(userId), "user", userPrompt, chipAnalyzeRequest.getModelName(), StatusEnum.VALID.getCode());
+
+        // 构建http-body
+        JSONObject requestBody = buildRequestBody(chipAnalyzeRequest, pdfResultList, userPrompt);
+
+        String apiUrl = deepSeekApiUrl, apiKey = deepSeekApiKey;
+        String actualModel = deepSeekModel;
+        if (Objects.equals(chipAnalyzeRequest.getModelName(), gptModel)) {
+            apiUrl = gptApiUrl;
+            apiKey = gptApiKey;
+            actualModel = gptModel;
+        }
+        // 请求体中的 model 使用解析后的真实模型名（旧别名自动映射到官方可用模型）
+        chipAnalyzeRequest.setModelName(actualModel);
+
+        logger.info("analyzeWithStream, llm apiUrl:{}, request body: {}", apiUrl, JSON.toJSONString(requestBody));
+
+        // 声明响应变量，扩大作用域
+        HttpResponse<InputStream> response = null;
+        StringBuilder buffer = new StringBuilder();
+
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(apiUrl))
+                    .header("Authorization", "Bearer " + apiKey)
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(requestBody.toJSONString()))
+                    .timeout(Duration.ofSeconds(180))
+                    .build();
+
+            // 请求LLM-API
+            HttpClient client = HttpClient.newHttpClient();
+            response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+
+            // 处理响应流
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(response.body()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (line.isEmpty()) {
+                        continue;
+                    }
+                    if (line.startsWith("data:")) {
+                        line = line.substring(5).trim();
+                    }
+                    if (line.equals("[DONE]")) {
+                        break;
+                    }
+                    // 解析
+                    DeepSeekResponse resp = JSON.parseObject(line, DeepSeekResponse.class);
+                    if (!CollectionUtils.isEmpty(resp.getChoices()) && resp.getChoices().get(0).getDelta() != null) {
+                        // 通过 SseEmitter 将 content 数据发送到前端
+                        String content = resp.getChoices().get(0).getDelta().getContent();
+                        if (!StringUtils.isEmpty(content)) {
+                            totalResult.append(content);
+                            buffer.append(content);
+                            if (buffer.length() > 10) {
+                                LlmStreamResponse streamResponse = new LlmStreamResponse("message", buffer.toString());
+                                String j = JSON.toJSONString(streamResponse);
+                                emitter.send(j);
+                                buffer.setLength(0); // 清空buffer
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.error("DeepSeek stream response error", e);
+            long t3 = System.currentTimeMillis();
+            chipCompareRecordService.addRecord(userId, chipPartNumberList.get(0), chipPartNumberList.get(1), fileList.toString(), ChipCompareStatusEnum.FAILED.getCode(), userPrompt, "",
+                    chipAnalyzeRequest.getModelName(), 0, 0, 0, Math.toIntExact(t3 - t2), totalResult.toString());
+            // sse异常结束
+            LlmStreamResponse streamResponse = new LlmStreamResponse("error", e.getMessage());
+            String j = JSON.toJSONString(streamResponse);
+            emitter.send(j);
+            emitter.complete();
+            return;
+        }
+        long t3 = System.currentTimeMillis();
+        logger.info("analyze finished, took: {} ms", (t3 - t2));
+        // 记录芯片对比日志
+        chipCompareRecordService.addRecord(userId, chipPartNumberList.get(0), chipPartNumberList.get(1), fileList.toString(), ChipCompareStatusEnum.SUCCESS.getCode(), userPrompt, "",
+                chipAnalyzeRequest.getModelName(), 0, 0, 0, Math.toIntExact(t3 - t2), totalResult.toString());
+        // 记录会话
+        messageRepository.addMessage(sessionId, Long.valueOf(userId), "assistant", totalResult.toString(), chipAnalyzeRequest.getModelName(), StatusEnum.VALID.getCode());
+        emitter.complete();
+    }
+
+    // 非流式
+    public String analyze(ChipAnalyzeRequest chipAnalyzeRequest) throws IOException, InterruptedException {
+        long t1 = System.currentTimeMillis();
+        Integer userId = UserCache.getUserContext().getUserid();
+        fillDefaultParams(chipAnalyzeRequest);
+        List<String> fileList = chipAnalyzeRequest.getFileList();
+        List<String> chipPartNumberList = chipAnalyzeRequest.getChipPartNumberList();
+
+        List<ChipPdfResult> results = pdfProcessor.processMultiplePdfs(fileList, chipPartNumberList);
+        long t2 = System.currentTimeMillis();
+
+        // 芯片库沉淀：把本次分析的芯片录入 chip 表
+        try {
+            chipLibraryService.recordChips(results);
+        } catch (Exception e) {
+            logger.error("record chips to library error", e);
+        }
+
+        // 创建session
+        Long sessionId = sessionRepository.createSession(Long.valueOf(userId), "pin2pin compare analyze" + fileList, UUID.randomUUID().toString());
+        String userPrompt = buildUserPrompt(results, chipAnalyzeRequest.getUserPrompt());
+        userPrompt = appendHistoryContext(userPrompt, chipPartNumberList);
+        messageRepository.addMessage(sessionId, Long.valueOf(userId), "user", userPrompt, chipAnalyzeRequest.getModelName(), StatusEnum.VALID.getCode());
+
+        // 构建请求
+        JSONObject requestBody = buildRequestBody(chipAnalyzeRequest, results, userPrompt);
+        logger.info("analyze request body: {}", JSON.toJSONString(requestBody));
+
+        // 默认模型
+        String apiUrl = deepSeekApiUrl, apiKey = deepSeekApiKey;
+        if (Objects.equals(chipAnalyzeRequest.getModelName(), gptModel)) {
+            apiUrl = gptApiUrl;
+            apiKey = gptApiKey;
+            chipAnalyzeRequest.setModelName(gptModel);
+        } else {
+            chipAnalyzeRequest.setModelName(deepSeekModel);
+        }
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(apiUrl))
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + apiKey)
+                .POST(HttpRequest.BodyPublishers.ofString(requestBody.toJSONString()))
+                .timeout(Duration.ofSeconds(180))
+                .build();
+
+        HttpClient client = HttpClient.newHttpClient();
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        long t3 = System.currentTimeMillis();
+
+        if (response.statusCode() == HttpStatus.OK.value()) {
+            JSONObject responseJson = JSON.parseObject(response.body());
+            String content = responseJson.getJSONArray("choices")
+                    .getJSONObject(0)
+                    .getJSONObject("message")
+                    .getString("content");
+            if (content == null) {
+                content = "";
+            }
+            // 记录日志（存干净的报告内容，而非原始 API 响应）
+            chipCompareRecordService.addRecord(userId, chipPartNumberList.get(0), chipPartNumberList.get(1), fileList.toString(), StatusEnum.VALID.getCode(), userPrompt, "",
+                    chipAnalyzeRequest.getModelName(), 0, 0, 0, Math.toIntExact(t3 - t2), content);
+            // 记录会话
+            messageRepository.addMessage(sessionId, Long.valueOf(userId), "assistant", content, chipAnalyzeRequest.getModelName(), StatusEnum.VALID.getCode());
+
+            return content;
+        }
+        chipCompareRecordService.addRecord(userId, chipPartNumberList.get(0), chipPartNumberList.get(1), fileList.toString(), StatusEnum.INVALID.getCode(), userPrompt, "",
+                chipAnalyzeRequest.getModelName(), 0, 0, 0, Math.toIntExact(t3 - t2), response.body());
+        return "Error: API request failed with code " + response.statusCode();
+    }
+
+    private void fillDefaultParams(ChipAnalyzeRequest chipAnalyzeRequest) {
+        if (StringUtils.isEmpty(chipAnalyzeRequest.getSystemPrompt())) {
+            chipAnalyzeRequest.setSystemPrompt(DEFAULT_SYSTEM_PROMPT);
+        }
+        if (chipAnalyzeRequest.getModelName() == null) {
+            chipAnalyzeRequest.setModelName(defaultModel);
+        }
+        if (chipAnalyzeRequest.getTemperature() == null) {
+            chipAnalyzeRequest.setTemperature(DEFAULT_TEMPERATURE);
+        }
+        if (chipAnalyzeRequest.getMaxTokens() == null) {
+            chipAnalyzeRequest.setMaxTokens(DEFAULT_MAX_TOKENS);
+        }
+        if (chipAnalyzeRequest.isStream() == null) {
+            chipAnalyzeRequest.setStream(true);
+        }
+    }
+
+    private JSONObject buildRequestBody(ChipAnalyzeRequest chipAnalyzeRequest, List<ChipPdfResult> chipPdfResultList, String userPrompt) {
+        //  构建参数
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("model", chipAnalyzeRequest.getModelName());
+        requestBody.put("temperature", chipAnalyzeRequest.getTemperature());
+        requestBody.put("max_tokens", chipAnalyzeRequest.getMaxTokens());
+        requestBody.put("stream", chipAnalyzeRequest.isStream());
+
+        JSONArray messages = new JSONArray();
+        JSONObject systemMsg = new JSONObject();
+        systemMsg.put("role", "system");
+        systemMsg.put("content", chipAnalyzeRequest.getSystemPrompt());
+        messages.add(systemMsg);
+
+        JSONObject userMsg = new JSONObject();
+        userMsg.put("role", "user");
+        userMsg.put("content", userPrompt);
+        messages.add(userMsg);
+
+        requestBody.put("messages", messages);
+        return requestBody;
+    }
+
+    private String buildUserPrompt(List<ChipPdfResult> chipDataList, String userPrompt) {
+        String userPromptTemplate = DEFAULT_USER_PROMPT_TEMPLATE;
+        if (!StringUtils.isBlank(userPrompt)) {
+            userPromptTemplate = userPrompt;
+        }
+
+        StringBuilder chipContent = new StringBuilder();
+        int index = 1;
+        for (ChipPdfResult chipData : chipDataList) {
+            String chipModel = chipData.getChipModel() != null ? chipData.getChipModel() : "芯片" + index;
+            String textContent = chipData.getTextContent() != null ? chipData.getTextContent() : "无内容";
+
+            chipContent.append("芯片").append(index).append("：").append(chipModel).append("\n");
+            chipContent.append("====原文内容====\n");
+            if (textContent.length() > 50000) {
+                chipContent.append(textContent, 0, 50000).append("...");
+            } else {
+                chipContent.append(textContent);
+            }
+            chipContent.append("\n\n");
+        }
+        return String.format(userPromptTemplate, chipContent);
+    }
+
+    public static final String DEFAULT_USER_PROMPT_TEMPLATE = """
+            你是一个专业芯片选型分析工程师，负责批量撰写高质量、格式统一的芯片 Pin2Pin 替代分析报告。
+            
+            # 📎 输入信息：
+            你收到若干芯片的 datasheet 解析结果，包括型号、品牌、电气参数、功能描述、引脚定义和应用场景。
+            
+            以下是芯片的文本内容：
+            
+            %s
+            
+            # 🎯 分析目标：
+            请针对这些芯片，进行结构化的 Pin2Pin 对比分析，最终输出为 Markdown 格式的技术报告，包括以下 6 大章节：
+            
+            ## 1. 产品定义和目标应用对比
+            
+            简要介绍每个芯片解决的问题、产品定位、目标应用领域。强调三者的共性与差异。
+            
+            ## 2. 封装与引脚布局对比（Pin-to-Pin表格）
+            
+            输出完整的引脚对照表，并说明是否可以物理 Pin2Pin 替代，是否需要修改 PCB，是否有功能不匹配的引脚。
+            
+            ## 3. 电气特性全面对比
+            
+            用表格列出关键电气参数（如输入电压、输出电流、Vos、PSRR、CMRR、带宽等），并逐项说明：
+            - 哪个芯片性能最优 ✅
+            - 哪个芯片存在短板 ⚠️
+            - 是否可替代？是否存在风险？
+            
+            ## 4. 功能模块特性对比
+            
+            说明这些芯片的内部功能模块（如零漂移、双参考输入、抗PWM设计等）是否一致，以及它们在抗干扰、温漂、稳定性方面的差异。
+            
+            ## 5. 典型应用适配性分析（按场景分类）
+            
+            请列出三种应用场景：
+            - 每种场景下推荐哪款芯片？
+            - 替代建议是什么？用表格列出说明。
+            
+            ## 6. Pin2Pin替代可行性总结与风险分析
+            
+            总结这些芯片之间互相替代的可行性，列出：
+            - 哪些方向可以完全替代 ✅
+            - 哪些方向存在参数风险 ⚠️
+            - 哪些方向存在封装、电压不兼容等问题 ❌
+            - 总结表格 + 替代建议
+            
+            # ⚠️ 输出格式：
+            
+            - 采用 Markdown 结构
+            - 使用清晰的标题（# / ## / ###）
+            - 所有对比表格使用三列以上格式
+            - 不要遗漏任何芯片的结论
+            - 输出必须结构清晰、逻辑严谨、数据支撑、工程落地可用
+            # 要求
+            - 只输出Pin2Pin 替代分析报告
+            要求
+            不要出现：好的，作为一名专业芯片选型分析工程师，我将根据您提供的两份芯片Datasheet，为您撰写一份结构化的Pin2Pin替代分析报告。""";
+}

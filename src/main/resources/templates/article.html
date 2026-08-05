@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SN6501-Q1 vs TPM6501-Q1 vs NSIP6501-Q1 - Pin-to-Pin Replacement Feasibility Analysis Report | BARBOT</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="/static/css/editormd.preview.min.css">
+    <!--    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/editor.md@1.5.0/css/editormd.min.css">-->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #0a192f;
+            --secondary: #112240;
+            --accent: #64ffda;
+            --text: #ccd6f6;
+            --text-light: #a8b2d1;
+            --card: #172a45;
+            --highlight: #233554;
+        }
+
+        body {
+            background-color: var(--primary);
+            color: var(--text);
+            background-image: radial-gradient(circle at 10% 20%, rgba(17, 34, 64, 0.8) 0%, transparent 20%),
+            radial-gradient(circle at 90% 80%, rgba(17, 34, 64, 0.8) 0%, transparent 20%);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* 电路板纹理 */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(rgba(25, 55, 109, 0.1) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(25, 55, 109, 0.1) 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: -1;
+        }
+
+        /* 导航栏 */
+        .navbar {
+            background-color: rgba(10, 25, 47, 0.95);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            padding: 1rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(100, 255, 218, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .logo i {
+            color: var(--accent);
+            font-size: 1.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: var(--text-light);
+            text-decoration: none;
+            font-size: 1.1rem;
+            font-weight: 500;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--accent);
+        }
+
+        .nav-links a::after {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            transition: width 0.3s;
+        }
+
+        .nav-links a:hover::after,
+        .nav-links a.active::after {
+            width: 100%;
+        }
+
+        /* 移动端导航菜单 */
+        .mobile-menu-btn {
+            display: none;
+            background: transparent;
+            border: none;
+            background: var(--accent);
+            color: var(--text);
+            font-size: 1.8rem;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 80%;
+            max-width: 320px;
+            height: 100vh;
+            background: var(--primary);
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            transition: right 0.4s ease-in-out;
+            padding: 6rem 2rem 2rem;
+            overflow-y: auto;
+        }
+
+        .mobile-menu.active {
+            right: 0;
+        }
+
+        .mobile-nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .mobile-nav-links a {
+            color: var(--text-light);
+            text-decoration: none;
+            font-size: 1.2rem;
+            padding: 0.8rem 1rem;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .mobile-nav-links a:hover,
+        .mobile-nav-links a.active {
+            color: var(--accent);
+            background: rgba(100, 255, 218, 0.1);
+        }
+
+        .mobile-menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s;
+        }
+
+        .mobile-menu-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+
+        /* 博客详情页 */
+        .blog-detail {
+            padding-top: 7rem;
+            padding-bottom: 5rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .blog-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .blog-header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 1.5rem;
+            color: var(--text);
+            line-height: 1.3;
+        }
+
+        .blog-meta {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            font-size: 1rem;
+        }
+
+        .card-tag {
+            background: var(--accent);
+            color: var(--primary);
+            padding: 0.3rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        /* 自定义Editor.md样式 */
+        #md-view {
+            padding: 2rem;
+            background: rgba(17, 34, 64, 0.5);
+            border-radius: 10px;
+        }
+
+        .editormd-html-preview, .editormd-preview-container {
+            padding: 0 !important;
+            background: transparent !important;
+            color: var(--text-light) !important;
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        .editormd-html-preview h1,
+        .editormd-html-preview h2,
+        .editormd-html-preview h3,
+        .editormd-html-preview h4,
+        .editormd-html-preview h5,
+        .editormd-html-preview h6 {
+            color: var(--text) !important;
+            border-color: rgba(100, 255, 218, 0.3) !important;
+        }
+
+        .editormd-html-preview h1 {
+            font-size: 2.2rem !important;
+            margin: 2.5rem 0 1.5rem !important;
+        }
+
+        .editormd-html-preview h2 {
+            font-size: 1.8rem !important;
+            margin: 2.2rem 0 1.3rem !important;
+        }
+
+        .editormd-html-preview h3 {
+            font-size: 1.5rem !important;
+            margin: 1.8rem 0 1.1rem !important;
+        }
+
+        .editormd-html-preview img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 2rem 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(100, 255, 218, 0.1);
+        }
+
+        .editormd-html-preview blockquote {
+            border-left: 4px solid var(--accent) !important;
+            padding: 1rem 1.5rem !important;
+            background: rgba(100, 255, 218, 0.05) !important;
+            color: var(--text) !important;
+        }
+
+        .editormd-html-preview pre {
+            background: var(--secondary) !important;
+            padding: 1.5rem !important;
+            border-radius: 8px !important;
+            border: 1px solid rgba(100, 255, 218, 0.1) !important;
+        }
+
+        .editormd-html-preview code {
+            font-family: 'Courier New', monospace !important;
+            background: rgba(100, 255, 218, 0.1) !important;
+            color: var(--accent) !important;
+            border-radius: 4px;
+            padding: 0.2rem 0.4rem !important;
+        }
+
+        /* 表格样式修改 - 关键更新部分 */
+        .editormd-html-preview table {
+            /*background: var(--secondary) !important; !* 表格背景改为深色 *!*/
+            /*border-radius: 8px;*/
+            overflow: hidden;
+            margin: 2rem 0;
+            border-collapse: collapse;
+            /*border: 1px solid rgba(100, 255, 218, 0.15);*/
+            width: 100%;
+        }
+
+        .editormd-html-preview table th {
+            background: rgba(100, 255, 218, 0.15) !important; /* 表头背景加深 */
+            color: var(--secondary) !important;
+            font-weight: 600;
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(100, 255, 218, 0.15);
+        }
+
+        .editormd-html-preview table td {
+            padding: 12px 15px;
+            /*border-bottom: 1px solid rgba(100, 255, 218, 0.15);*/
+            color: var(--text-light);
+            border: 1px solid rgba(100, 255, 218, 0.15);
+        }
+
+        .editormd-html-preview table tr {
+            background: transparent;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(100, 255, 218, 0.15);
+        }
+
+        .editormd-html-preview table tr:hover {
+            background: rgba(100, 255, 218, 0.08) !important; /* 悬停效果增强 */
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .editormd-html-preview table tr:nth-child(even) {
+            background: rgba(17, 34, 64, 0.3); /* 斑马条纹效果 */
+        }
+
+        .editormd-html-preview table tr:last-child td {
+            border-bottom: none;
+        }
+
+
+        /* 页脚 */
+        .footer {
+            background: rgba(7, 20, 38, 0.95);
+            padding: 4rem 0 2rem;
+            border-top: 1px solid rgba(100, 255, 218, 0.1);
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .footer-column h3 {
+            color: var(--accent);
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            padding-bottom: 0.5rem;
+        }
+
+        .footer-column h3::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 2px;
+            background: var(--accent);
+        }
+
+        .footer-links a {
+            display: block;
+            color: var(--text-light);
+            margin-bottom: 0.8rem;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--card);
+            color: var(--text-light);
+            transition: all 0.3s;
+        }
+
+        .social-links a:hover {
+            background: var(--accent);
+            color: var(--primary);
+            transform: translateY(-5px);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 3rem;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(100, 255, 218, 0.1);
+            margin-top: 3rem;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .menu-toggle {
+                display: block;
+                font-size: 1.5rem;
+                color: var(--text);
+                cursor: pointer;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .blog-header h1 {
+                font-size: 2.2rem;
+            }
+
+            .blog-meta {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+
+        /* 回到顶部按钮 */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: var(--accent);
+            color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s;
+            z-index: 999;
+            box-shadow: 0 5px 15px rgba(100, 255, 218, 0.4);
+        }
+
+        .back-to-top.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+<!-- 导航栏 -->
+<nav class="navbar">
+    <a href="/" class="logo">
+        <i class="fas fa-microchip"></i>BARBOT
+    </a>
+    <div class="nav-links">
+        <a href="/" class="active">首页</a>
+        <a href="/blog">博客文章</a>
+        <a href="/">行业分析</a>
+        <a href="/chip/compare">Pin2Pin对比</a>
+        <a href="/about">关于我们</a>
+    </div>
+    <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <i class="fas fa-bars"></i>
+    </button>
+</nav>
+
+<!-- 移动端菜单 -->
+<div class="mobile-menu" id="mobileMenu">
+    <div class="mobile-nav-links">
+        <a href="/" class="active">首页</a>
+        <a href="/blog">博客文章</a>
+        <a href="/">行业分析</a>
+        <a href="/chip/compare">Pin2Pin对比</a>
+        <a href="/about">关于我们</a>
+    </div>
+</div>
+<div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+
+<!-- 博客详情 -->
+<section class="blog-detail">
+    <div class="container">
+        <div class="blog-header">
+            <h1 th:text="${article.title}"></h1>
+            <div class="blog-meta">
+                <span th:text="${article.author}"><i class="fas fa-user"></i> </span>
+                <span th:text="${article.createTime}"><i class="far fa-calendar"></i></span>
+                <span><i class="far fa-clock"></i> 阅读时间 8分钟</span>
+                <!--                <span><i class="far fa-comment"></i> 24条评论</span>-->
+            </div>
+            <div class="card-tag" th:text="${article.tag}"></div>
+        </div>
+
+        <div id="md-view">
+            <textarea id="markdown-content" style="display:none;" th:text="${article.content}"></textarea>
+        </div>
+    </div>
+</section>
+
+<!-- 页脚 -->
+<footer class="footer">
+    <div class="footer-content">
+        <div class="footer-column">
+            <h3>BARBOT</h3>
+            <p>
+                是一家以大模型驱动为内核、服务于芯片原厂的内容创作与数字化营销平台。我们相信：内容即营销，内容即触达，内容即转化。</p>
+            <div class="social-links">
+                <a href="#"><i class="fab fa-weibo"></i></a>
+                <a href="#"><i class="fab fa-weixin"></i></a>
+                <a href="#"><i class="fab fa-github"></i></a>
+                <a href="#"><i class="fab fa-linkedin"></i></a>
+            </div>
+        </div>
+
+        <div class="footer-column">
+            <h3>热门分类</h3>
+            <div class="footer-links">
+                <a href="#">芯片设计</a>
+                <a href="#">制造工艺</a>
+                <a href="#">AI与HPC芯片</a>
+                <a href="#">汽车半导体</a>
+                <a href="#">物联网芯片</a>
+            </div>
+        </div>
+
+        <div class="footer-column">
+            <h3>资源中心</h3>
+            <div class="footer-links">
+                <a href="#">技术白皮书</a>
+                <a href="#">行业报告</a>
+                <a href="#">设计工具</a>
+                <a href="#">芯片数据库</a>
+                <a href="#">在线研讨会</a>
+            </div>
+        </div>
+
+        <div class="footer-column">
+            <h3>联系我们</h3>
+            <div class="footer-links">
+                <a href="#"><i class="fas fa-envelope"></i> neal.liu@chatbarbot.com</a>
+                <a href="#"><i class="fas fa-phone"></i> +86 18538200387</a>
+                <a href="#"><i class="fas fa-map-marker-alt"></i> 中国广州</a>
+            </div>
+            <form class="subscribe-form">
+                <input type="email" placeholder="您的电子邮箱" required>
+                <button type="submit" class="btn btn-primary">订阅资讯</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="copyright">
+        <p>&copy; 2025 BARBOT 巴巴塔 | 专注半导体科技创新</p>
+    </div>
+</footer>
+
+<!-- 回到顶部按钮 -->
+<div class="back-to-top">
+    <i class="fas fa-arrow-up"></i>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!--<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>-->
+
+<script src="/static/lib/marked.min.js"></script>
+<!--<script src="/static/lib/prettify.min.js"></script>-->
+<!--<script src="/static/lib/raphael.min.js"></script>-->
+<!--<script src="/static/lib/underscore.min.js"></script>-->
+<!--<script src="/static/lib/sequence-diagram.min.js"></script>-->
+<!--<script src="/static/lib/flowchart.min.js"></script>-->
+<!--<script src="/static/lib/jquery.flowchart.min.js"></script>-->
+<script src="/static/js/editormd.min.js"></script>
+<!--<script src="https://cdn.jsdelivr.net/npm/editor.md@1.5.0/editormd.min.js"></script>-->
+
+<script>
+    $(document).ready(function () {
+        // 移动端菜单切换
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+
+        function toggleMobileMenu() {
+            mobileMenu.classList.toggle('active');
+            mobileMenuOverlay.classList.toggle('active');
+            document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
+        }
+
+        mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+        mobileMenuOverlay.addEventListener('click', toggleMobileMenu);
+
+        // 回到顶部按钮
+        $(window).scroll(function () {
+            if ($(this).scrollTop() > 300) {
+                $('.back-to-top').addClass('show');
+            } else {
+                $('.back-to-top').removeClass('show');
+            }
+        });
+
+        $('.back-to-top').click(function () {
+            $('html, body').animate({scrollTop: 0}, 800);
+            return false;
+        });
+
+        // 导航栏滚动效果
+        $(window).scroll(function () {
+            if ($(this).scrollTop() > 100) {
+                $('.navbar').css('padding', '0.8rem 5%');
+            } else {
+                $('.navbar').css('padding', '1rem 5%');
+            }
+        });
+
+        // 初始化Editor.md
+        var editor = editormd.markdownToHTML("md-view", {
+            markdown: md,
+            htmlDecode: "style,script,iframe",
+            emoji: true,
+            taskList: true,
+            tex: true,
+            flowChart: true,
+            sequenceDiagram: true,
+            previewCodeHighlight: true,
+            toc: true,
+            tocStartLevel: 2,
+            tocTitle: "文章目录",
+            tocContainer: "#custom-toc-container",
+            tocDropdown: true,
+            theme: "dark",
+            editorTheme: "pastel-on-dark",
+            path: "https://cdn.jsdelivr.net/npm/editor.md@1.5.0/lib/"
+        });
+
+        // 添加自定义样式到渲染后的内容
+        setTimeout(function () {
+            // 添加图片说明样式
+            $(".editormd-html-preview em").each(function () {
+                if ($(this).text().startsWith("图")) {
+                    $(this).addClass("image-caption");
+                    $(this).css({
+                        "display": "block",
+                        "text-align": "center",
+                        "font-style": "italic",
+                        "color": "#a8b2d1",
+                        "margin-top": "-1.5rem",
+                        "margin-bottom": "2rem",
+                        "font-size": "0.95rem"
+                    });
+                }
+            });
+
+            // 添加高亮框样式
+            $(".editormd-html-preview strong").each(function () {
+                if ($(this).text().includes("核心洞察：")) {
+                    $(this).parent().wrap('<div class="highlight-box"></div>');
+                    $(".highlight-box").css({
+                        "background": "var(--secondary)",
+                        "padding": "1.5rem",
+                        "border-radius": "8px",
+                        "margin": "2rem 0",
+                        "border-left": "4px solid var(--accent)"
+                    });
+                }
+            });
+        }, 500);
+
+    });
+
+    var md = $("#markdown-content").text();
+
+</script>
+</body>
+</html>

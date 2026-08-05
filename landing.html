@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHIP AI - 智能芯片 Pin2Pin 分析平台 | AI驱动的芯片替代解决方案</title>
+    <meta name="description" content="CHIP AI 是基于大语言模型的智能芯片分析平台，提供精准的 Pin2Pin 替代方案，加速硬件设计流程。">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Lora:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /*
+         * CHIP AI - Product Landing Page
+         * Anthropic Brand Identity Applied
+         */
+
+        :root {
+            /* Anthropic Official Brand Colors */
+            --bg-primary: #faf9f5;
+            --bg-secondary: #e8e6dc;
+            --bg-tertiary: #f5f4ef;
+            --bg-hover: #dedad0;
+            --border-color: #d0cec4;
+            --text-primary: #141413;
+            --text-secondary: #787773;
+            --text-muted: #b0aea5;
+            --accent-orange: #d97757;
+            --accent-blue: #6a9bcc;
+            --accent-green: #788c5d;
+            --dark: #141413;
+            --light: #faf9f5;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Lora', Georgia, serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Poppins', Arial, sans-serif;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        /* ========== 导航栏 ========== */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(250, 249, 245, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .navbar.scrolled {
+            box-shadow: 0 4px 20px rgba(20, 20, 19, 0.08);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: 800;
+            font-family: 'Poppins', sans-serif;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-blue));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-orange);
+        }
+
+        .nav-cta {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-blue));
+            color: white;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(217, 119, 87, 0.25);
+        }
+
+        .nav-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(217, 119, 87, 0.35);
+        }
+
+        /* ========== Hero 区域 ========== */
+        .hero {
+            padding: 140px 24px 100px;
+            text-align: center;
+            background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-tertiary) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -30%;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(217, 119, 87, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -50%;
+            left: -30%;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(106, 155, 204, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: float 25s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+            }
+            50% {
+                transform: translate(50px, 50px) scale(1.1);
+            }
+        }
+
+        .hero-content {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            background: linear-gradient(135deg, rgba(217, 119, 87, 0.1), rgba(106, 155, 204, 0.1));
+            border: 2px solid var(--border-color);
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent-orange);
+            margin-bottom: 24px;
+            animation: slideDown 0.6s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero h1 {
+            font-size: 56px;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-orange));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: slideUp 0.8s ease-out 0.2s both;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero p {
+            font-size: 20px;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            line-height: 1.8;
+            animation: slideUp 0.8s ease-out 0.4s both;
+        }
+
+        .hero-cta {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            animation: slideUp 0.8s ease-out 0.6s both;
+        }
+
+        .btn-primary {
+            padding: 16px 40px;
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-blue));
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(217, 119, 87, 0.3);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 24px rgba(217, 119, 87, 0.4);
+        }
+
+        .btn-secondary {
+            padding: 16px 40px;
+            background: white;
+            color: var(--text-primary);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-orange);
+            background-color: var(--bg-tertiary);
+        }
+
+        /* ========== 特性区域 ========== */
+        .features {
+            padding: 100px 24px;
+            background-color: var(--bg-primary);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            background-color: var(--bg-secondary);
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent-orange);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .section-header h2 {
+            font-size: 42px;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .section-header p {
+            font-size: 18px;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 32px;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            border: 2px solid var(--border-color);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-orange), var(--accent-blue));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 32px rgba(20, 20, 19, 0.1);
+            border-color: var(--accent-orange);
+        }
+
+        .feature-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .feature-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-blue));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 16px rgba(217, 119, 87, 0.2);
+        }
+
+        .feature-card h3 {
+            font-size: 22px;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .feature-card p {
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        /* ========== 工作流程 ========== */
+        .workflow {
+            padding: 100px 24px;
+            background: linear-gradient(180deg, var(--bg-tertiary) 0%, var(--bg-primary) 100%);
+        }
+
+        .workflow-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 32px;
+            margin-top: 60px;
+        }
+
+        .workflow-step {
+            text-align: center;
+            position: relative;
+        }
+
+        .step-number {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-blue));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 32px;
+            font-weight: 800;
+            color: white;
+            box-shadow: 0 8px 24px rgba(217, 119, 87, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .workflow-step::after {
+            content: '→';
+            position: absolute;
+            top: 40px;
+            right: -40px;
+            font-size: 32px;
+            color: var(--border-color);
+        }
+
+        .workflow-step:last-child::after {
+            display: none;
+        }
+
+        .workflow-step h3 {
+            font-size: 20px;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .workflow-step p {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* ========== 定价区域 ========== */
+        .pricing {
+            padding: 100px 24px;
+            background-color: var(--bg-primary);
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 32px;
+            margin-top: 60px;
+            max-width: 1000px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .pricing-card {
+            background: white;
+            padding: 48px 40px;
+            border-radius: 20px;
+            border: 2px solid var(--border-color);
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .pricing-card.featured {
+            border-color: var(--accent-orange);
+            box-shadow: 0 12px 40px rgba(217, 119, 87, 0.2);
+            transform: scale(1.05);
+        }
+
+        .pricing-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 6px 20px;
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-blue));
+            color: white;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 16px 48px rgba(20, 20, 19, 0.15);
+        }
+
+        .pricing-card h3 {
+            font-size: 24px;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .pricing-price {
+            font-size: 48px;
+            font-weight: 800;
+            color: var(--accent-orange);
+            margin-bottom: 8px;
+        }
+
+        .pricing-period {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 32px;
+        }
+
+        .pricing-features {
+            list-style: none;
+            margin-bottom: 32px;
+            text-align: left;
+        }
+
+        .pricing-features li {
+            padding: 12px 0;
+            border-bottom: 1px solid var(--bg-secondary);
+            font-size: 15px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .pricing-features li::before {
+            content: '✓';
+            color: var(--accent-green);
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .pricing-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-blue));
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pricing-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(217, 119, 87, 0.3);
+        }
+
+        /* ========== 博客区域 ========== */
+        .blog-section {
+            padding: 100px 24px;
+            background: linear-gradient(180deg, var(--bg-tertiary) 0%, var(--bg-primary) 100%);
+        }
+
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 32px;
+            margin-top: 60px;
+        }
+
+        .blog-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 2px solid var(--border-color);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .blog-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 32px rgba(20, 20, 19, 0.12);
+            border-color: var(--accent-orange);
+        }
+
+        .blog-image {
+            width: 100%;
+            height: 220px;
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 64px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .blog-image::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.3) 100%);
+        }
+
+        .blog-content {
+            padding: 28px;
+        }
+
+        .blog-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .blog-tag {
+            padding: 4px 12px;
+            background-color: var(--bg-tertiary);
+            border-radius: 12px;
+            font-weight: 600;
+            color: var(--accent-orange);
+        }
+
+        .blog-card h3 {
+            font-size: 20px;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+            line-height: 1.4;
+        }
+
+        .blog-card p {
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+
+        .blog-read-more {
+            color: var(--accent-orange);
+            font-weight: 600;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: gap 0.3s ease;
+        }
+
+        .blog-card:hover .blog-read-more {
+            gap: 12px;
+        }
+
+        .blog-cta {
+            text-align: center;
+            margin-top: 48px;
+        }
+
+        .blog-cta .btn-secondary {
+            display: inline-block;
+        }
+
+        /* ========== CTA 区域 ========== */
+        .cta-section {
+            padding: 100px 24px;
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-blue));
+            text-align: center;
+            color: white;
+        }
+
+        .cta-section h2 {
+            font-size: 42px;
+            margin-bottom: 24px;
+            color: white;
+        }
+
+        .cta-section p {
+            font-size: 20px;
+            margin-bottom: 40px;
+            opacity: 0.95;
+        }
+
+        .cta-section .btn-primary {
+            background: white;
+            color: var(--accent-orange);
+        }
+
+        .cta-section .btn-primary:hover {
+            background: var(--bg-primary);
+        }
+
+        /* ========== Footer ========== */
+        .footer {
+            padding: 60px 24px 32px;
+            background-color: var(--dark);
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 48px;
+            margin-bottom: 48px;
+        }
+
+        .footer-section h4 {
+            color: white;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 12px;
+        }
+
+        .footer-section a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .footer-section a:hover {
+            color: var(--accent-orange);
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-top: 32px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            font-size: 14px;
+        }
+
+        /* ========== 响应式设计 ========== */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 36px;
+            }
+
+            .hero p {
+                font-size: 16px;
+            }
+
+            .hero-cta {
+                flex-direction: column;
+            }
+
+            .section-header h2 {
+                font-size: 32px;
+            }
+
+            .workflow-step::after {
+                display: none;
+            }
+
+            .pricing-card.featured {
+                transform: none;
+            }
+
+            .blog-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cta-section h2 {
+                font-size: 32px;
+            }
+        }
+
+        /* ========== 滚动条美化 ========== */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo">
+                <div class="logo-icon">🔬</div>
+                <span>CHIP AI</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="#features">功能特性</a></li>
+                <li><a href="#workflow">工作流程</a></li>
+                <li><a href="#pricing">定价方案</a></li>
+                <li><a href="#blog">技术博客</a></li>
+                <li><a href="#about">关于我们</a></li>
+            </ul>
+            <a href="#pricing" class="nav-cta">立即开始</a>
+        </div>
+    </nav>
+
+    <!-- Hero 区域 -->
+    <section class="hero">
+        <div class="hero-content">
+            <span class="hero-badge">🚀 AI驱动 · 毫秒级响应 · 99.9%准确率</span>
+            <h1>智能芯片 Pin2Pin 分析<br>让芯片替代变得简单</h1>
+            <p>基于大语言模型的AI芯片分析平台，上传PDF数据表即可获得精准的Pin2Pin替代方案。<br>为硬件工程师节省90%的选型时间，加速产品开发周期。</p>
+            <div class="hero-cta">
+                <a href="demo.html" class="btn-primary">
+                    🎯 免费试用
+                    <span>→</span>
+                </a>
+                <a href="#workflow" class="btn-secondary">了解更多</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 特性区域 -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">核心功能</span>
+                <h2>为什么选择 CHIP AI？</h2>
+                <p>结合最前沿的AI技术和深度行业洞察，为您提供最专业的芯片分析服务</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>AI智能分析</h3>
+                    <p>基于 GPT-4/DeepSeek 等先进大语言模型，自动提取PDF中的关键参数，进行多维度智能对比分析。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>秒级生成报告</h3>
+                    <p>实时流式输出分析结果，无需等待。上传数据表后即可获得详细的Markdown格式对比报告。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>精准替代推荐</h3>
+                    <p>综合电气参数、封装规格、功能特性等多个维度，提供最合适的Pin2Pin替代建议。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>可视化对比</h3>
+                    <p>自动生成参数对比表格、功能差异分析、应用场景建议，让技术决策更直观。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💾</div>
+                    <h3>历史记录管理</h3>
+                    <p>所有分析记录云端保存，支持导出分享。随时查看历史对比，建立您的芯片知识库。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>数据安全保障</h3>
+                    <p>企业级数据加密，支持私有化部署。您的技术资料受到最高级别的安全保护。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 工作流程 -->
+    <section class="workflow" id="workflow">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">简单四步</span>
+                <h2>如何使用 CHIP AI？</h2>
+                <p>无需复杂配置，4步即可完成芯片Pin2Pin分析</p>
+            </div>
+            <div class="workflow-steps">
+                <div class="workflow-step">
+                    <div class="step-number">1</div>
+                    <h3>上传数据表</h3>
+                    <p>上传需要对比的芯片PDF数据表，支持拖拽上传，最多2个文件</p>
+                </div>
+                <div class="workflow-step">
+                    <div class="step-number">2</div>
+                    <h3>AI自动分析</h3>
+                    <p>大语言模型自动提取关键参数，进行多维度智能对比分析</p>
+                </div>
+                <div class="workflow-step">
+                    <div class="step-number">3</div>
+                    <h3>查看报告</h3>
+                    <p>实时生成详细对比报告，包含参数表、功能差异、替代建议</p>
+                </div>
+                <div class="workflow-step">
+                    <div class="step-number">4</div>
+                    <h3>导出分享</h3>
+                    <p>支持Markdown/PDF/Excel等多种格式导出，一键分享团队</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 定价方案 -->
+    <section class="pricing" id="pricing">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">灵活定价</span>
+                <h2>选择适合您的方案</h2>
+                <p>无论个人开发者还是企业团队，都能找到合适的方案</p>
+            </div>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <h3>免费版</h3>
+                    <div class="pricing-price">¥0</div>
+                    <div class="pricing-period">永久免费</div>
+                    <ul class="pricing-features">
+                        <li>每日 3 次分析额度</li>
+                        <li>基础芯片参数对比</li>
+                        <li>Markdown 报告导出</li>
+                        <li>7天历史记录保存</li>
+                        <li>社区技术支持</li>
+                    </ul>
+                    <button class="pricing-btn">免费注册</button>
+                </div>
+
+                <div class="pricing-card featured">
+                    <span class="pricing-badge">最受欢迎</span>
+                    <h3>专业版</h3>
+                    <div class="pricing-price">¥299</div>
+                    <div class="pricing-period">每月</div>
+                    <ul class="pricing-features">
+                        <li>每日 50 次分析额度</li>
+                        <li>高级AI分析引擎</li>
+                        <li>多格式报告导出</li>
+                        <li>无限历史记录</li>
+                        <li>优先技术支持</li>
+                        <li>团队协作功能</li>
+                    </ul>
+                    <button class="pricing-btn">立即购买</button>
+                </div>
+
+                <div class="pricing-card">
+                    <h3>企业版</h3>
+                    <div class="pricing-price">定制</div>
+                    <div class="pricing-period">按需报价</div>
+                    <ul class="pricing-features">
+                        <li>无限分析次数</li>
+                        <li>私有化部署支持</li>
+                        <li>API接口对接</li>
+                        <li>定制化功能开发</li>
+                        <li>专属客户经理</li>
+                        <li>SLA服务保障</li>
+                    </ul>
+                    <button class="pricing-btn">联系销售</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 技术博客区域 -->
+    <section class="blog-section" id="blog">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">技术洞察</span>
+                <h2>CHIP AI 技术博客</h2>
+                <p>探索芯片分析、AI技术、硬件设计的最新趋势和实践经验</p>
+            </div>
+            <div class="blog-grid">
+                <div class="blog-card" onclick="window.location.href='blog_list.html'">
+                    <div class="blog-image">🔬</div>
+                    <div class="blog-content">
+                        <div class="blog-meta">
+                            <span class="blog-tag">芯片分析</span>
+                            <span>2025-01-15</span>
+                        </div>
+                        <h3>如何利用AI加速芯片Pin2Pin替代分析</h3>
+                        <p>传统的芯片选型需要工程师手动对比数十页PDF文档。本文介绍如何利用大语言模型自动化这一过程，提升10倍效率...</p>
+                        <a href="blog_list.html" class="blog-read-more">
+                            阅读全文 →
+                        </a>
+                    </div>
+                </div>
+
+                <div class="blog-card" onclick="window.location.href='blog_list.html'">
+                    <div class="blog-image">🤖</div>
+                    <div class="blog-content">
+                        <div class="blog-meta">
+                            <span class="blog-tag">AI技术</span>
+                            <span>2025-01-12</span>
+                        </div>
+                        <h3>GPT-4与DeepSeek在芯片参数提取中的对比</h3>
+                        <p>我们测试了主流大语言模型在处理技术文档时的表现。结果显示，不同模型在准确率、速度、成本上各有优势...</p>
+                        <a href="blog_list.html" class="blog-read-more">
+                            阅读全文 →
+                        </a>
+                    </div>
+                </div>
+
+                <div class="blog-card" onclick="window.location.href='blog_list.html'">
+                    <div class="blog-image">⚡</div>
+                    <div class="blog-content">
+                        <div class="blog-meta">
+                            <span class="blog-tag">技术对比</span>
+                            <span>2025-01-08</span>
+                        </div>
+                        <h3>国产芯片替代：从选型到验证的完整指南</h3>
+                        <p>随着国产化趋势加速，越来越多的项目需要进行芯片国产替代。本指南涵盖选型方法、验证流程、常见陷阱...</p>
+                        <a href="blog_list.html" class="blog-read-more">
+                            阅读全文 →
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="blog-cta">
+                <a href="blog_list.html" class="btn-secondary">查看所有文章 →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA 区域 -->
+    <section class="cta-section">
+        <div class="container">
+            <h2>准备好体验AI驱动的芯片分析了吗？</h2>
+            <p>立即注册，获取3次免费分析额度，感受前所未有的效率提升</p>
+            <a href="demo.html" class="btn-primary">
+                🚀 立即开始免费试用
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer" id="about">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>CHIP AI</h4>
+                <p>基于AI的智能芯片分析平台<br>让Pin2Pin替代变得简单高效</p>
+            </div>
+            <div class="footer-section">
+                <h4>产品</h4>
+                <ul>
+                    <li><a href="#features">功能特性</a></li>
+                    <li><a href="#workflow">工作流程</a></li>
+                    <li><a href="#pricing">定价方案</a></li>
+                    <li><a href="demo.html">在线Demo</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>资源</h4>
+                <ul>
+                    <li><a href="blog_list.html">技术博客</a></li>
+                    <li><a href="#">开发文档</a></li>
+                    <li><a href="#">API接口</a></li>
+                    <li><a href="#">常见问题</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>联系我们</h4>
+                <ul>
+                    <li><a href="mailto:contact@chipai.com">contact@chipai.com</a></li>
+                    <li><a href="#">GitHub</a></li>
+                    <li><a href="#">Twitter</a></li>
+                    <li><a href="#">微信公众号</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 CHIP AI. All rights reserved. | Powered by Anthropic Claude</p>
+        </div>
+    </footer>
+
+    <script>
+        // 导航栏滚动效果
+        window.addEventListener('scroll', () => {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // 按钮点击统计（模拟）
+        document.querySelectorAll('.btn-primary, .pricing-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                if (!this.href || this.href === '#') {
+                    e.preventDefault();
+                    console.log('Button clicked:', this.textContent.trim());
+                    alert('感谢您的兴趣！这是一个原型演示。\n实际产品中，此按钮将引导您完成注册或购买流程。');
+                }
+            });
+        });
+
+        // 特性卡片进入视口动画
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '0';
+                    entry.target.style.transform = 'translateY(30px)';
+                    entry.target.style.transition = 'all 0.6s ease';
+
+                    setTimeout(() => {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }, 100);
+
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.feature-card, .workflow-step, .pricing-card, .blog-card').forEach(el => {
+            observer.observe(el);
+        });
+
+        // 控制台彩蛋
+        console.log('%c🚀 CHIP AI - Powered by Claude', 'font-size: 20px; color: #d97757; font-weight: bold;');
+        console.log('%c欢迎探索我们的产品！有任何问题欢迎联系我们。', 'font-size: 14px; color: #787773;');
+    </script>
+</body>
+</html>

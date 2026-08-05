@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Chat Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-container {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            overflow-y: auto;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .message {
+            margin: 15px 0;
+            display: flex;
+            gap: 15px;
+        }
+
+        .user-message {
+            justify-content: flex-end;
+        }
+
+        .bubble {
+            max-width: 70%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        .user-bubble {
+            background: #1890ff;
+            color: white;
+            border-radius: 18px 18px 4px 18px;
+        }
+
+        .assistant-bubble {
+            background: #f5f5f5;
+            color: #333;
+            border-radius: 18px 18px 18px 4px;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 12px;
+            padding: 15px 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        #input {
+            flex: 1;
+            padding: 14px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #input:focus {
+            border-color: #1890ff;
+        }
+
+        #sendBtn {
+            padding: 12px 30px;
+            background: #1890ff;
+            border: none;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        #sendBtn:hover {
+            background: #1476d2;
+        }
+
+        #sendBtn:disabled {
+            background: #a0c4ff;
+            cursor: not-allowed;
+        }
+
+        /* 美化滚动条 */
+        .chat-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .chat-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        .chat-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="chat-container" id="chatBox"></div>
+    <div class="input-area">
+        <input type="text" id="input" placeholder="输入您的问题...">
+        <button id="sendBtn">发送</button>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        const chatBox = $('#chatBox');
+        const input = $('#input');
+        const sendBtn = $('#sendBtn');
+
+        function appendMessage(content, isUser) {
+            const messageClass = isUser ? 'user-message' : 'assistant-message';
+            const bubbleClass = isUser ? 'user-bubble' : 'assistant-bubble';
+
+            const message = $('<div>').addClass('message ' + messageClass);
+            const bubble = $('<div>').addClass('bubble ' + bubbleClass).html(content);
+
+            message.append(bubble);
+            chatBox.append(message);
+            chatBox.scrollTop(chatBox[0].scrollHeight);
+
+            return bubble;
+        }
+
+        async function handleSend() {
+            const question = input.val().trim();
+            if (!question) return;
+
+            input.val('');
+            sendBtn.prop('disabled', true);
+
+            // 添加用户消息
+            appendMessage(question, true);
+
+            // 添加助手消息容器
+            const assistantBubble = appendMessage('', false);
+
+            try {
+                const eventSource = new EventSource(`/api/chat/stream?query=${encodeURIComponent(question)}`);
+
+                eventSource.onmessage = (event) => {
+                    if (event.data === '[DONE]') {
+                        eventSource.close();
+                        sendBtn.prop('disabled', false);
+                        return;
+                    }
+
+                    assistantBubble.html(assistantBubble.html() + event.data);
+                    chatBox.scrollTop(chatBox[0].scrollHeight);
+                };
+
+                eventSource.onerror = (err) => {
+                    console.error('EventSource error:', err);
+                    assistantBubble.html(assistantBubble.html() + '<span style="color: red">（服务中断）</span>');
+                    eventSource.close();
+                    sendBtn.prop('disabled', false);
+                };
+            } catch (error) {
+                console.error('Error:', error);
+                assistantBubble.html('请求失败，请重试');
+                sendBtn.prop('disabled', false);
+            }
+        }
+
+        sendBtn.click(handleSend);
+        input.keypress(function (e) {
+            if (e.which === 13 && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+            }
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="layouts/base :: head-common"/>
+    <link rel="stylesheet" th:href="@{/static/css/about.css}">
+    <title>关于 CHIP AI</title>
+</head>
+<body>
+<nav th:replace="layouts/base :: navbar"></nav>
+
+<main class="about-page">
+    <section class="about-hero">
+        <div class="about-hero-grid">
+            <div class="hero-copy">
+                <span class="eyebrow">关于我们</span>
+                <h1>让芯片替代更可靠、更高效</h1>
+                <p>
+                    CHIP AI 汇聚行业经验与大模型能力，为工程团队提供高可信的 Pin2Pin 替代分析、
+                    数据表解析与成本评估。我们相信，芯片选择的每一步都应该可追溯、可协作、可落地。
+                </p>
+                <div class="hero-metrics">
+                    <div>
+                        <h3>4 万+</h3>
+                        <span>芯片型号库</span>
+                    </div>
+                    <div>
+                        <h3>12 秒</h3>
+                        <span>平均生成报告</span>
+                    </div>
+                    <div>
+                        <h3>98%</h3>
+                        <span>工程师满意度</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-card">
+                <div class="hero-card-header">
+                    <h2>CHIP AI 能做什么？</h2>
+                    <p>覆盖数据表解析、替代推荐、风险对比三大场景。</p>
+                </div>
+                <ul class="hero-card-list">
+                    <li>
+                        <span>📄</span>
+                        <div>
+                            <h4>数据表智能拆解</h4>
+                            <p>自动识别关键参数、封装与引脚定义。</p>
+                        </div>
+                    </li>
+                    <li>
+                        <span>🔍</span>
+                        <div>
+                            <h4>替代方案推荐</h4>
+                            <p>结合性能指标与供应链可用性给出建议。</p>
+                        </div>
+                    </li>
+                    <li>
+                        <span>📈</span>
+                        <div>
+                            <h4>差异可视化报告</h4>
+                            <p>一键生成可分享的比较分析与风险提示。</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section class="about-values">
+        <div class="section-header">
+            <span class="eyebrow">价值主张</span>
+            <h2>把复杂的芯片决策变成可执行的行动</h2>
+            <p>我们帮助研发团队更快、更准地做出替代决策。</p>
+        </div>
+        <div class="values-grid">
+            <article>
+                <h3>数据驱动</h3>
+                <p>融合数据表、器件库与历史项目经验，建立可验证的判断链路。</p>
+            </article>
+            <article>
+                <h3>工程视角</h3>
+                <p>以工程师场景为核心，呈现关键参数差异和风险提示。</p>
+            </article>
+            <article>
+                <h3>协同闭环</h3>
+                <p>从分析到归档完整记录，支持跨团队共享与复盘。</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="about-timeline">
+        <div class="section-header">
+            <span class="eyebrow">发展历程</span>
+            <h2>持续打磨的产品节奏</h2>
+            <p>通过迭代与行业合作，让 AI 更懂芯片替代。</p>
+        </div>
+        <div class="timeline-grid">
+            <div class="timeline-item">
+                <span class="timeline-year">2023</span>
+                <h3>平台内测</h3>
+                <p>联合 12 家芯片原厂完成首轮模型训练。</p>
+            </div>
+            <div class="timeline-item">
+                <span class="timeline-year">2024</span>
+                <h3>企业版上线</h3>
+                <p>推出团队协作与私有部署能力。</p>
+            </div>
+            <div class="timeline-item">
+                <span class="timeline-year">2025</span>
+                <h3>行业生态</h3>
+                <p>开放数据接口与生态伙伴共建行业标准。</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="about-contact">
+        <div class="contact-card">
+            <div>
+                <h2>准备好开始了吗？</h2>
+                <p>联系我们获取企业试用、技术支持或联合方案。</p>
+            </div>
+            <div class="contact-actions">
+                <a th:href="@{/chip}" class="btn btn-primary">开始分析</a>
+                <a href="mailto:contact@chipai.com" class="btn btn-outline">联系团队</a>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer th:replace="layouts/base :: footer"></footer>
+
+<th:block th:replace="layouts/base :: scripts-common"/>
+</body>
+</html>

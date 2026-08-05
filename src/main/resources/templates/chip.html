@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ET6002 - 芯片详情</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+
+        .container {
+            width: 70%;
+            margin: 30px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+        }
+
+        .header h1 {
+            color: #007bff;
+            font-size: 22px;
+        }
+
+        .pdf-download {
+            display: flex;
+            align-items: center;
+        }
+
+        .pdf-download img {
+            width: 24px;
+            margin-right: 8px;
+        }
+
+        .pdf-download a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .tabs {
+            display: flex;
+            margin-top: 15px;
+        }
+
+        .tabs div {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tabs div.active {
+            border-color: #007bff;
+            font-weight: bold;
+        }
+
+        .section {
+            margin-top: 20px;
+        }
+
+        .section h2 {
+            font-size: 18px;
+            color: #007bff;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+
+        .description {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <div class="header">
+        <h1 id="partNumber">{}</h1>
+        <div class="pdf-download">
+            <img src="pdf_icon.png" alt="PDF">
+            <a href="#">{}</a>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" data-tab="introduction">基本介绍</div>
+        <div class="tab" data-tab="replacement-models">替代型号</div>
+        <div class="tab" data-tab="purchase-channels">购买渠道</div>
+    </div>
+
+    <div class="section" id="introduction">
+        <h2>芯片百科</h2>
+        <p class="description" id="description">{}</p>
+    </div>
+
+    <div class="section">
+        <h2>制造商</h2>
+        <p class="description" id="manufacturer">{}</p>
+    </div>
+
+    <div class="section">
+        <h2>参数</h2>
+        <p class="description" id="parameter">{}</p>
+    </div>
+
+    <div class="section">
+        <h2>特性</h2>
+        <p class="description">ET6002 集成 12-bit ADC（支持 34 路通道）、12-bit Buffered DAC、硬件加速模块（AES、CRC）等。</p>
+    </div>
+
+    <div class="section">
+        <h2>应用</h2>
+        <p class="description">广泛应用于高性能电机控制、信号处理、嵌入式系统等领域。</p>
+    </div>
+
+    <div class="section" id="replacement-models">
+        <h2>替代型号</h2>
+        <p class="description">此芯片的替代型号包括 {}</p>
+    </div>
+
+    <div class="section" id="purchase-channels">
+        <h2>购买渠道</h2>
+        <p class="description">您可以在各大电子元器件商城或官网购买此芯片。</p>
+    </div>
+</div>
+
+<script src="/static/js/jquery.min.js"></script>
+<script>
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', function () {
+            // 移除所有 tab 的 active 类
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            // 当前 tab 变 active
+            this.classList.add('active');
+            // 滚动到对应 section
+            let sectionId = this.getAttribute("data-tab");
+            let section = document.getElementById(sectionId);
+
+            if (section) {
+                section.scrollIntoView({behavior: 'smooth'});
+            }
+        });
+    });
+
+
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id"); // 获取URL中的keyword参数
+    $.ajax({
+        url: "/api/chip/detail?id=" + id,
+        type: "get",
+        dataType: "json",
+        success: function (d) {
+            if (d.status !== 0) {
+                return;
+            }
+            var chip = d.data.chip;
+            var pin2pins = d.data.pin2pins
+            if (chip) {
+                $("#partNumber").text(chip.partNumber);
+                $("#description").text(chip.description);
+                $("#manufacturer").text(chip.manufacturer);
+                $("#parameter").text(chip.parameter);
+            }
+            if (pin2pins) {
+
+            }
+        }
+    })
+
+
+</script>
+</body>
+</html>

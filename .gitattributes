@@ -1,0 +1,6 @@
+# Vendored/build artifacts are kept byte-for-byte from their upstream source.
+src/main/resources/static/md/** -whitespace
+*.md -whitespace
+
+# Binary artifacts
+docs/*.png binary

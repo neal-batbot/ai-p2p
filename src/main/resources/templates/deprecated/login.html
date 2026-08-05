@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- Head tag -->
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="/static/wallpaper/1.png">
+    <script async defer src="/js/buttons.js"></script>
+    <title>
+        Login - Chip
+    </title>
+
+    <!-- Bootstrap Core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/beantech.min.css">
+
+    <!-- Pygments Highlight CSS -->
+    <link rel="stylesheet" href="/css/rocket.css">
+
+    <!-- Custom Fonts -->
+    <link href="/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+    <style type="text/css">
+        header.intro-header {
+            background-image: url('/wallpaper/login.jpg')
+            /*page*/
+        }
+    </style>
+</head>
+
+<body ontouchstart="">
+<!-- Post Header -->
+<header class="intro-header">
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+
+                    <div class="site-heading">
+                        <h1>Login</h1>
+                        <span class="subheading"></span>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/static">Chip</a>
+        </div>
+
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/static">Home</a>
+                    </li>
+
+                    <!--                    <li>-->
+                    <!--                        <a href="/about">About</a>-->
+                    <!--                    </li>-->
+
+                    <!--                    <li>-->
+                    <!--                        <a href="/archives">Archives</a>-->
+                    <!--                    </li>-->
+
+                    <!--                    <li>-->
+                    <!--                        <a href="/tags">Tags</a>-->
+                    <!--                    </li>-->
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+
+<script>
+    var $body = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+    $toggle.addEventListener('click', handleMagic)
+
+    function handleMagic(e) {
+        if ($navbar.className.indexOf('in') > 0) {
+            // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function () {
+                // prevent frequently toggle
+                if ($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            }, 400)
+        } else {
+            // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+<div class="fh5co-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-9 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+                <div class="col-md-20">
+                    <br>
+                    <br>
+                    <form id="form" accept-charset="utf-8">
+                        <div class="form-group">
+                            <div class="row">
+                                <div class="col-md-9">
+                                    <input type="text" name="username" id="username" class="form-control"
+                                           onkeydown="u_enter();" placeholder="Username"
+                                           style="height:50px; font-size:20px;">
+                                </div>
+                            </div>
+                        </div>
+                        <br>
+                        <div class="form-group">
+                            <div class="row">
+                                <div class="col-md-9">
+                                    <input type="password" name="password" id="password" onkeydown="p_enter();"
+                                           class="form-control" placeholder="Password"
+                                           style="height:50px; font-size:20px;">
+                                </div>
+                            </div>
+                        </div>
+                        <br>
+                        <div class="form-group">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <input type="button" id="login_button" onclick="login();"
+                                           class="btn btn-primary btn-outline btn-lg btn-block" value="Login">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                    <li>
+                        <a href="javascript:void(0);">
+                                <span class="fa-stack fa-lg">
+                                    <i class="fa fa-circle fa-stack-2x"></i>
+                                    <i class="fa fa-stack-1x fa-inverse">知</i>
+                                </span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="javascript:void(0);">
+                                <span class="fa-stack fa-lg">
+                                    <i class="fa fa-circle fa-stack-2x"></i>
+                                    <i class="fa fa-weibo fa-stack-1x fa-inverse"></i>
+                                </span>
+                        </a>
+                    </li>
+
+                </ul>
+
+                <p class="copyright text-muted">
+                    Copyright © Babata 2023-2025
+                    <br>
+                    Theme by <a href="http://beantech.org/">BeanTech</a>
+                    <span style="display: inline-block; margin: 0 5px;">
+                            <i class="fa fa-heart"></i>
+                        </span>
+                    <br>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="/js/jquery.min.js"></script>
+<script src="/js/jsencrypt.min.js"></script>
+
+<script>
+    const userName = $("#username");
+    const passWord = $("#password");
+    userName.focus();
+
+    function login() {
+        if (userName.val() === "" || passWord.val() === "") {
+            alert("请填写完整登录信息!");
+            return false;
+        }
+        let username = userName.val();
+        let password = passWord.val();
+
+        const publicKey = "MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAJfxev3T3AP8ClI38wYNWT37I+ut5sbeWD879nE9ceq88Hk4DO6YFj+L20F1afuhxaaX/oaYcYhgxHRXvMDOz3kCAwEAAQ==";
+        const encrypt = new JSEncrypt();
+        encrypt.setPublicKey(publicKey);
+        username = encrypt.encrypt(username);
+        password = encrypt.encrypt(password);
+
+        const form = new FormData();
+        form.append("username", username);
+        form.append("password", password);
+        $.ajax({
+            url: "/api/admin/authentication",
+            type: "post",
+            data: form,
+            dataType: "json",
+            processData: false,
+            contentType: false,
+            async: true,
+            success: function (data) {
+                if (data.status === 0) {
+                    alert('登录成功!');
+                    const param = new URLSearchParams(window.location.search);
+                    window.location.href = param.get("redirect_url");
+                } else {
+                    // 登录失败
+                    alert(data.message);
+                }
+            }
+        })
+    }
+
+    function u_enter() {
+        if (event.keyCode === 13) {
+            passWord.focus();
+        }
+    }
+
+    function p_enter() {
+        if (event.keyCode === 13) {
+            login();
+        }
+    }
+
+</script>
+
+<a id="rocket" href="#top" class=""></a>
+<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+</body>
+</html>

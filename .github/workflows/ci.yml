@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Build and verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: chip
+          MYSQL_USER: chip
+          MYSQL_PASSWORD: chip
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+    env:
+      SPRING_PROFILES_ACTIVE: ci
+      DB_URL: jdbc:mysql://127.0.0.1:3306/chip?characterEncoding=utf-8&serverTimezone=UTC
+      DB_USERNAME: chip
+      DB_PASSWORD: chip
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: scripts/pdf-inspector/package-lock.json
+
+      - name: Install PDF inspector dependencies
+        working-directory: scripts/pdf-inspector
+        run: npm ci
+
+      - name: Verify PDF inspector entrypoint
+        run: node --check scripts/pdf-inspector/extract.js
+
+      - name: Compile application
+        run: ./mvnw --batch-mode --no-transfer-progress clean compile -DskipTests
+
+      - name: Run unit tests
+        run: ./mvnw --batch-mode --no-transfer-progress test
+
+      - name: Build deployable JAR
+        run: ./mvnw --batch-mode --no-transfer-progress package -DskipTests
+
+      - name: Upload verification reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports-${{ github.run_number }}
+          path: |
+            target/surefire-reports/
+            target/*.jar
+          if-no-files-found: ignore
+          retention-days: 14

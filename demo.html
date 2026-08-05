@@ -1,0 +1,2318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能芯片 Pin2Pin 对比分析助手</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Lora:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /*
+         * Anthropic Official Brand Identity Applied
+         *
+         * Color Palette:
+         * - Primary Background: #faf9f5 (Light cream)
+         * - Secondary Background: #e8e6dc (Light gray)
+         * - Text Primary: #141413 (Dark)
+         * - Accent Colors: #d97757 (Orange), #6a9bcc (Blue), #788c5d (Green)
+         *
+         * Typography:
+         * - Headings: Poppins (with Arial fallback)
+         * - Body Text: Lora (with Georgia fallback)
+         */
+
+        :root {
+            /* Anthropic Official Brand Colors */
+            --bg-primary: #faf9f5;
+            --bg-secondary: #e8e6dc;
+            --bg-tertiary: #f5f4ef;
+            --bg-hover: #dedad0;
+            --border-color: #d0cec4;
+            --text-primary: #141413;
+            --text-secondary: #787773;
+            --text-muted: #b0aea5;
+            --accent-orange: #d97757;
+            --accent-blue: #6a9bcc;
+            --accent-green: #788c5d;
+            --dark: #141413;
+            --light: #faf9f5;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Lora', Georgia, serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Typography - Headings use Poppins, Body uses Lora */
+        h1, h2, h3, h4, h5, h6,
+        .sidebar-title,
+        .page-title,
+        .empty-title,
+        .settings-title,
+        .btn {
+            font-family: 'Poppins', Arial, sans-serif;
+        }
+
+        /* ========== 左侧边栏 ========== */
+        .sidebar {
+            width: 280px;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            box-shadow: 2px 0 12px rgba(20, 20, 19, 0.05);
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .sidebar-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .sidebar-icon {
+            width: 20px;
+            height: 20px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        /* 上传区域 */
+        .upload-section {
+            background-color: var(--bg-tertiary);
+            border: 2px dashed var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(217, 119, 87, 0.08), rgba(106, 155, 204, 0.08));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .upload-section:hover {
+            border-color: var(--accent-orange);
+            background-color: rgba(217, 119, 87, 0.05);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(217, 119, 87, 0.12);
+        }
+
+        .upload-section:hover::before {
+            opacity: 1;
+        }
+
+        .upload-section:active {
+            transform: translateY(0);
+        }
+
+        .upload-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 16px;
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-blue));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 4px 12px rgba(217, 119, 87, 0.25);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 4px 12px rgba(217, 119, 87, 0.25);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 6px 16px rgba(217, 119, 87, 0.35);
+            }
+        }
+
+        .upload-section:hover .upload-icon {
+            animation: none;
+            transform: scale(1.1);
+        }
+
+        .upload-icon svg {
+            width: 24px;
+            height: 24px;
+            color: white;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+        }
+
+        .upload-text {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .upload-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 已上传文件列表 */
+        .file-list {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 16px;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background-color: var(--bg-tertiary);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+            box-shadow: 0 2px 6px rgba(20, 20, 19, 0.04);
+        }
+
+        .file-item:hover {
+            background-color: var(--bg-hover);
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(20, 20, 19, 0.08);
+        }
+
+        .file-item.active {
+            background-color: rgba(217, 119, 87, 0.08);
+            border: 2px solid var(--accent-orange);
+            box-shadow: 0 4px 16px rgba(217, 119, 87, 0.15);
+        }
+
+        .file-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent-orange), #e8906f);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-size: 10px;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 2px 8px rgba(217, 119, 87, 0.3);
+            transition: transform 0.3s ease;
+        }
+
+        .file-item:hover .file-icon {
+            transform: scale(1.1) rotate(3deg);
+        }
+
+        .file-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-name {
+            font-size: 13px;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-size {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .file-remove {
+            width: 20px;
+            height: 20px;
+            color: var(--text-muted);
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .file-item:hover .file-remove {
+            opacity: 1;
+        }
+
+        /* 分割线 */
+        .divider {
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 12px 0;
+        }
+
+        /* 设置区域 */
+        .settings-section {
+            margin-bottom: 16px;
+        }
+
+        .settings-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .setting-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+        }
+
+        .setting-label {
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+
+        /* 自定义开关 */
+        .toggle {
+            position: relative;
+            width: 36px;
+            height: 20px;
+            background-color: var(--bg-hover);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .toggle.active {
+            background-color: var(--accent-green);
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background-color: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.2s ease;
+        }
+
+        .toggle.active::after {
+            transform: translateX(16px);
+        }
+
+        /* 格式选择 */
+        .format-options {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .format-chip {
+            padding: 8px 16px;
+            background-color: var(--bg-tertiary);
+            border: 2px solid var(--border-color);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 4px rgba(20, 20, 19, 0.03);
+        }
+
+        .format-chip:hover {
+            border-color: var(--accent-orange);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(217, 119, 87, 0.15);
+        }
+
+        .format-chip.active {
+            background: linear-gradient(135deg, rgba(217, 119, 87, 0.12), rgba(106, 155, 204, 0.12));
+            border-color: var(--accent-orange);
+            color: var(--accent-orange);
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(217, 119, 87, 0.2);
+        }
+
+        /* 关于信息 */
+        .about-section {
+            margin-top: auto;
+            padding: 16px;
+            background: linear-gradient(135deg, rgba(217, 119, 87, 0.06), rgba(106, 155, 204, 0.06));
+            border-radius: 12px;
+            border: 1px solid rgba(217, 119, 87, 0.15);
+            box-shadow: 0 2px 8px rgba(20, 20, 19, 0.04);
+        }
+
+        .about-section p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* ========== 主内容区 ========== */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-primary);
+        }
+
+        /* 顶部导航 */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .page-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-blue));
+            color: white;
+            box-shadow: 0 2px 8px rgba(217, 119, 87, 0.2);
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(217, 119, 87, 0.3);
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--bg-hover);
+        }
+
+        /* Tab 导航 */
+        .tab-nav {
+            display: flex;
+            gap: 4px;
+            padding: 12px 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab-btn {
+            padding: 8px 16px;
+            background-color: transparent;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            background-color: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        /* Content area */
+        .content-area {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .empty-icon {
+            width: 96px;
+            height: 96px;
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 24px rgba(20, 20, 19, 0.06);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .empty-icon svg {
+            width: 48px;
+            height: 48px;
+            color: var(--text-muted);
+        }
+
+        .empty-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+
+        .empty-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+            max-width: 400px;
+            line-height: 1.6;
+        }
+
+        /* 编辑器区域 */
+        .editor-container {
+            background-color: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 16px rgba(20, 20, 19, 0.08);
+        }
+
+        .editor-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+
+        .toolbar-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .toolbar-btn:hover {
+            background-color: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .toolbar-divider {
+            width: 1px;
+            height: 20px;
+            background-color: var(--border-color);
+            margin: 0 4px;
+        }
+
+        .editor-body {
+            flex: 1;
+            display: flex;
+        }
+
+        .editor-pane {
+            flex: 1;
+            padding: 16px;
+            background-color: var(--bg-tertiary);
+        }
+
+        .editor-pane textarea {
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+        }
+
+        .preview-pane {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            border-left: 1px solid var(--border-color);
+            background-color: white;
+        }
+
+        /* 底部输入区 */
+        .bottom-input {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .input-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px 16px;
+            box-shadow: 0 2px 8px rgba(20, 20, 19, 0.05);
+            transition: box-shadow 0.2s ease;
+        }
+
+        .input-container:focus-within {
+            box-shadow: 0 4px 12px rgba(217, 119, 87, 0.15);
+            border-color: var(--accent-orange);
+        }
+
+        .input-container input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+        }
+
+        .input-container input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .input-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-blue));
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(217, 119, 87, 0.2);
+        }
+
+        .input-btn:hover {
+            opacity: 0.9;
+            box-shadow: 0 4px 10px rgba(217, 119, 87, 0.3);
+        }
+
+        /* 进度条 */
+        .progress-container {
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background-color: var(--bg-tertiary);
+            border-radius: 3px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 3px rgba(20, 20, 19, 0.1);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-orange), var(--accent-blue));
+            width: 0%;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.3),
+                transparent
+            );
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%);
+            }
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        .progress-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 10px;
+            font-weight: 500;
+        }
+
+        /* Additional Brand Styling */
+        a {
+            color: var(--accent-blue);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        a:hover {
+            color: var(--accent-orange);
+        }
+
+        ::selection {
+            background-color: rgba(217, 119, 87, 0.2);
+            color: var(--dark);
+        }
+
+        .tab-btn.active {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-weight: 500;
+            border-bottom: 2px solid var(--accent-orange);
+        }
+
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        /* ========== 响应式设计 ========== */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 240px;
+            }
+
+            .page-title {
+                font-size: 16px;
+            }
+
+            .btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                padding: 12px;
+                max-height: 40vh;
+                overflow-y: auto;
+            }
+
+            .sidebar-header {
+                margin-bottom: 12px;
+            }
+
+            .upload-section {
+                padding: 16px;
+                margin-bottom: 12px;
+            }
+
+            .upload-icon {
+                width: 40px;
+                height: 40px;
+            }
+
+            .upload-icon svg {
+                width: 20px;
+                height: 20px;
+            }
+
+            .file-list {
+                max-height: 150px;
+            }
+
+            .top-bar {
+                flex-wrap: wrap;
+                gap: 12px;
+                padding: 16px;
+            }
+
+            .page-title {
+                font-size: 16px;
+                width: 100%;
+            }
+
+            .top-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+
+            .tab-nav {
+                padding: 8px 16px;
+                overflow-x: auto;
+                flex-wrap: nowrap;
+            }
+
+            .tab-btn {
+                white-space: nowrap;
+                font-size: 12px;
+                padding: 6px 12px;
+            }
+
+            .content-area {
+                padding: 16px;
+            }
+
+            .editor-body {
+                flex-direction: column;
+            }
+
+            .preview-pane {
+                border-left: none;
+                border-top: 1px solid var(--border-color);
+                min-height: 300px;
+            }
+
+            .bottom-input {
+                padding: 12px 16px;
+            }
+
+            .input-container {
+                flex-wrap: wrap;
+            }
+
+            .input-container input {
+                flex: 1 1 100%;
+                margin-bottom: 8px;
+            }
+
+            .input-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .format-options {
+                flex-direction: column;
+            }
+
+            .format-chip {
+                width: 100%;
+                text-align: center;
+            }
+
+            .empty-icon {
+                width: 72px;
+                height: 72px;
+            }
+
+            .empty-icon svg {
+                width: 36px;
+                height: 36px;
+            }
+
+            .empty-title {
+                font-size: 18px;
+            }
+
+            .empty-desc {
+                font-size: 13px;
+            }
+
+            .toolbar-btn {
+                width: 28px;
+                height: 28px;
+                font-size: 11px;
+            }
+        }
+
+        /* 打印样式优化 */
+        @media print {
+            .sidebar,
+            .top-bar,
+            .tab-nav,
+            .bottom-input,
+            .editor-toolbar {
+                display: none;
+            }
+
+            .main-content {
+                border: none;
+            }
+
+            .editor-body {
+                display: block;
+            }
+
+            .preview-pane {
+                border: none;
+                padding: 0;
+            }
+        }
+
+        /* ========== 问答页面样式 ========== */
+        .qa-container {
+            display: none;
+            height: 100%;
+            flex-direction: column;
+        }
+
+        .qa-container.active {
+            display: flex;
+        }
+
+        .qa-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .qa-message {
+            display: flex;
+            gap: 12px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .qa-message.user {
+            justify-content: flex-end;
+        }
+
+        .qa-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .qa-avatar.user-avatar {
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-blue));
+            color: white;
+            box-shadow: 0 2px 8px rgba(217, 119, 87, 0.3);
+        }
+
+        .qa-avatar.assistant-avatar {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
+            color: white;
+            box-shadow: 0 2px 8px rgba(106, 155, 204, 0.3);
+        }
+
+        .qa-content {
+            max-width: 70%;
+            background-color: var(--bg-secondary);
+            padding: 16px 20px;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(20, 20, 19, 0.06);
+            line-height: 1.6;
+        }
+
+        .qa-message.user .qa-content {
+            background: linear-gradient(135deg, rgba(217, 119, 87, 0.12), rgba(106, 155, 204, 0.12));
+            border: 1px solid rgba(217, 119, 87, 0.2);
+        }
+
+        .qa-message.assistant .qa-content {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .qa-timestamp {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 6px;
+            display: block;
+        }
+
+        .qa-typing {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            background-color: var(--bg-secondary);
+            border-radius: 16px;
+            width: fit-content;
+            box-shadow: 0 2px 8px rgba(20, 20, 19, 0.06);
+        }
+
+        .qa-typing.active {
+            display: flex;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-orange);
+            border-radius: 50%;
+            animation: typingBounce 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typingBounce {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .qa-welcome {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .qa-welcome-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-blue));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 24px rgba(217, 119, 87, 0.25);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .qa-welcome-icon svg {
+            width: 40px;
+            height: 40px;
+            color: white;
+        }
+
+        .qa-welcome-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+
+        .qa-welcome-desc {
+            font-size: 15px;
+            color: var(--text-secondary);
+            max-width: 500px;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        .suggestion-chip {
+            padding: 10px 18px;
+            background-color: var(--bg-tertiary);
+            border: 2px solid var(--border-color);
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 4px rgba(20, 20, 19, 0.03);
+        }
+
+        .suggestion-chip:hover {
+            background: linear-gradient(135deg, rgba(217, 119, 87, 0.08), rgba(106, 155, 204, 0.08));
+            border-color: var(--accent-orange);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(217, 119, 87, 0.15);
+        }
+
+        .qa-welcome-suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            max-width: 600px;
+        }
+
+        /* Tab content visibility */
+        .tab-content {
+            display: none;
+            height: 100%;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ========== 发布博客按钮 ========== */
+        .toolbar-spacer {
+            flex: 1;
+        }
+
+        .publish-btn {
+            margin-left: auto;
+            padding: 8px 20px !important;
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-blue));
+            color: white !important;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            width: auto !important;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(217, 119, 87, 0.25);
+        }
+
+        .publish-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(217, 119, 87, 0.35);
+        }
+
+        /* ========== 模态对话框 ========== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(20, 20, 19, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-container {
+            background-color: var(--bg-primary);
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(20, 20, 19, 0.3);
+            max-width: 600px;
+            width: 90%;
+            max-height: 85vh;
+            overflow: hidden;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background-color: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 24px;
+            max-height: calc(85vh - 180px);
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-color);
+            background-color: var(--bg-tertiary);
+        }
+
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .required {
+            color: var(--accent-orange);
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--accent-orange);
+            box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.1);
+        }
+
+        .form-hint {
+            display: block;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        /* 单选按钮组 */
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .radio-label {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .radio-label:hover {
+            border-color: var(--accent-orange);
+            background-color: rgba(217, 119, 87, 0.05);
+        }
+
+        .radio-label input[type="radio"] {
+            margin-right: 10px;
+        }
+
+        .radio-label input[type="radio"]:checked ~ span {
+            color: var(--accent-orange);
+            font-weight: 600;
+        }
+
+        /* 内容统计 */
+        .content-stats {
+            display: flex;
+            gap: 24px;
+            padding: 16px;
+            background: linear-gradient(135deg, rgba(217, 119, 87, 0.06), rgba(106, 155, 204, 0.06));
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .stat-item strong {
+            color: var(--accent-orange);
+        }
+
+        /* 按钮样式 */
+        .modal-footer .btn-secondary {
+            padding: 10px 24px;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-footer .btn-secondary:hover {
+            background-color: var(--bg-hover);
+        }
+
+        .modal-footer .btn-primary {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-blue));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(217, 119, 87, 0.25);
+            position: relative;
+        }
+
+        .modal-footer .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(217, 119, 87, 0.35);
+        }
+
+        .btn-loading {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .loading-spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ========== Toast 提示 ========== */
+        .toast {
+            display: none;
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(20, 20, 19, 0.2);
+            padding: 20px;
+            max-width: 400px;
+            z-index: 2000;
+            animation: slideInRight 0.3s ease;
+        }
+
+        .toast.active {
+            display: flex;
+            gap: 16px;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .toast-icon {
+            font-size: 32px;
+            flex-shrink: 0;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .toast-message {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .toast-link {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .toast-link:hover {
+            color: var(--accent-orange);
+        }
+
+        .toast-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .toast-btn {
+            padding: 6px 14px;
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .toast-btn:hover {
+            background-color: var(--bg-hover);
+            border-color: var(--accent-orange);
+        }
+    </style>
+</head>
+<body>
+    <!-- 左侧边栏 -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <span class="sidebar-title">📁 数据源</span>
+            <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+        </div>
+
+        <!-- 上传区域 -->
+        <div class="upload-section" onclick="document.getElementById('file-upload').click()">
+            <div class="upload-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+            </div>
+            <div class="upload-text">点击上传芯片数据表</div>
+            <div class="upload-hint">支持 PDF 格式，最多 2 个文件</div>
+            <input type="file" id="file-upload" multiple accept=".pdf" style="display: none;">
+        </div>
+
+        <!-- 已上传文件列表 -->
+        <div class="file-list">
+            <div class="file-item active">
+                <div class="file-icon">PDF</div>
+                <div class="file-info">
+                    <div class="file-name">TLV2365-Q1.pdf</div>
+                    <div class="file-size">1.2 MB</div>
+                </div>
+                <svg class="file-remove" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </div>
+            <div class="file-item">
+                <div class="file-icon">PDF</div>
+                <div class="file-info">
+                    <div class="file-name">INA950-SEP.pdf</div>
+                    <div class="file-size">856 KB</div>
+                </div>
+                <svg class="file-remove" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- 输出格式设置 -->
+        <div class="settings-section">
+            <div class="settings-title">输出格式</div>
+            <div class="format-options">
+                <div class="format-chip active">Markdown</div>
+                <div class="format-chip">JSON</div>
+                <div class="format-chip">Excel</div>
+            </div>
+        </div>
+
+        <!-- 流式传输设置 -->
+        <div class="settings-section">
+            <div class="setting-item">
+                <span class="setting-label">🌊 流式传输</span>
+                <div class="toggle active"></div>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- 关于信息 -->
+        <div class="about-section">
+            <p>📌 支持硬件工程师快速进行 Pin2Pin 替代分析，上传芯片 PDF 自动生成对比结果。</p>
+        </div>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+        <!-- 顶部导航 -->
+        <header class="top-bar">
+            <h1 class="page-title">🔧 智能芯片 Pin2Pin 对比分析助手</h1>
+            <div class="top-actions">
+                <button class="btn btn-secondary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                    设置
+                </button>
+                <button class="btn btn-primary">
+                    💰 账户充值
+                </button>
+            </div>
+        </header>
+
+        <!-- Tab 导航 -->
+        <nav class="tab-nav">
+            <button class="tab-btn active" data-tab="editor">📝 Markdown 编辑</button>
+            <button class="tab-btn" data-tab="report">📊 分析报告</button>
+            <button class="tab-btn" data-tab="qa">💬 问答助手</button>
+            <button class="tab-btn" data-tab="history">🕐 历史记录</button>
+        </nav>
+
+        <!-- 内容区域 -->
+        <div class="content-area">
+            <!-- Markdown 编辑器 Tab -->
+            <div class="tab-content active" id="editor-tab">
+                <!-- 进度条（分析时显示） -->
+                <div class="progress-container" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 45%;"></div>
+                    </div>
+                    <div class="progress-text">正在分析芯片数据...</div>
+                </div>
+
+                <!-- 编辑器容器 -->
+                <div class="editor-container">
+                    <!-- 工具栏 -->
+                    <div class="editor-toolbar">
+                        <button class="toolbar-btn" title="撤销">↩️</button>
+                        <button class="toolbar-btn" title="重做">↪️</button>
+                        <div class="toolbar-divider"></div>
+                        <button class="toolbar-btn" title="加粗"><b>B</b></button>
+                        <button class="toolbar-btn" title="斜体"><i>I</i></button>
+                        <button class="toolbar-btn" title="删除线"><s>S</s></button>
+                        <div class="toolbar-divider"></div>
+                        <button class="toolbar-btn" title="标题1">H1</button>
+                        <button class="toolbar-btn" title="标题2">H2</button>
+                        <button class="toolbar-btn" title="标题3">H3</button>
+                        <div class="toolbar-divider"></div>
+                        <button class="toolbar-btn" title="无序列表">•</button>
+                        <button class="toolbar-btn" title="有序列表">1.</button>
+                        <button class="toolbar-btn" title="引用">"</button>
+                        <div class="toolbar-divider"></div>
+                        <button class="toolbar-btn" title="代码">&lt;/&gt;</button>
+                        <button class="toolbar-btn" title="链接">🔗</button>
+                        <button class="toolbar-btn" title="图片">🖼️</button>
+                        <button class="toolbar-btn" title="表格">📋</button>
+                        <div class="toolbar-spacer"></div>
+                        <button class="toolbar-btn publish-btn" id="publish-blog-btn" title="发布为博客">📝 发布博客</button>
+                    </div>
+
+                    <!-- 编辑器主体 -->
+                    <div class="editor-body">
+                        <div class="editor-pane">
+                            <textarea placeholder="在这里编写 Markdown 内容，或点击「开始分析」自动生成..."></textarea>
+                        </div>
+                        <div class="preview-pane">
+                            <div class="empty-state">
+                                <div class="empty-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"></path>
+                                    </svg>
+                                </div>
+                                <div class="empty-title">等待分析结果</div>
+                                <div class="empty-desc">上传芯片数据表后，点击开始分析即可生成 Pin2Pin 对比报告</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 分析报告 Tab -->
+            <div class="tab-content" id="report-tab">
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M9 17H7A5 5 0 0 1 7 7h2m6 10h2a5 5 0 0 0 0-10h-2m-6 5h6"></path>
+                        </svg>
+                    </div>
+                    <div class="empty-title">暂无分析报告</div>
+                    <div class="empty-desc">完成芯片分析后，报告将在这里显示</div>
+                </div>
+            </div>
+
+            <!-- 问答助手 Tab -->
+            <div class="tab-content" id="qa-tab">
+                <div class="qa-container active">
+                    <!-- 欢迎界面 -->
+                    <div class="qa-welcome" id="qa-welcome">
+                        <div class="qa-welcome-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                        </div>
+                        <h2 class="qa-welcome-title">智能问答助手</h2>
+                        <p class="qa-welcome-desc">我可以帮您解答关于芯片分析、Pin2Pin 替代、参数对比等问题。选择下方的建议问题开始对话，或直接输入您的问题。</p>
+                        <div class="qa-welcome-suggestions">
+                            <div class="suggestion-chip" data-question="如何进行 Pin2Pin 芯片替代分析？">如何进行 Pin2Pin 芯片替代分析？</div>
+                            <div class="suggestion-chip" data-question="哪些参数是芯片替代的关键指标？">哪些参数是芯片替代的关键指标？</div>
+                            <div class="suggestion-chip" data-question="如何上传和分析芯片数据表？">如何上传和分析芯片数据表？</div>
+                            <div class="suggestion-chip" data-question="支持哪些芯片类型的分析？">支持哪些芯片类型的分析？</div>
+                        </div>
+                    </div>
+
+                    <!-- 对话消息区域 -->
+                    <div class="qa-messages" id="qa-messages" style="display: none;">
+                        <!-- 消息将动态添加到这里 -->
+                    </div>
+
+                    <!-- 打字指示器 -->
+                    <div class="qa-typing" id="qa-typing">
+                        <div class="qa-avatar assistant-avatar">AI</div>
+                        <div class="typing-dots">
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 历史记录 Tab -->
+            <div class="tab-content" id="history-tab">
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                    </div>
+                    <div class="empty-title">暂无历史记录</div>
+                    <div class="empty-desc">您的分析历史记录将在这里显示</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部输入/操作区 -->
+        <div class="bottom-input">
+            <div class="input-container">
+                <input type="text" placeholder="输入额外的分析要求或问题...">
+                <div class="input-actions">
+                    <span style="font-size: 12px; color: var(--text-muted);">2 个文件已选择</span>
+                    <button class="input-btn" title="开始分析">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 博客发布对话框 -->
+    <div class="modal-overlay" id="publish-modal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 class="modal-title">📝 发布为博客文章</h2>
+                <button class="modal-close" id="close-publish-modal">✕</button>
+            </div>
+
+            <div class="modal-body">
+                <form id="publish-form">
+                    <!-- 文章标题 -->
+                    <div class="form-group">
+                        <label class="form-label">文章标题 <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="article-title"
+                               placeholder="输入文章标题" required>
+                    </div>
+
+                    <!-- 英文标题 -->
+                    <div class="form-group">
+                        <label class="form-label">英文标题（URL）<span class="required">*</span></label>
+                        <input type="text" class="form-input" id="article-en-title"
+                               placeholder="article-slug-example" required>
+                        <span class="form-hint">将用于生成文章URL，建议使用小写字母和连字符</span>
+                    </div>
+
+                    <!-- 副标题 -->
+                    <div class="form-group">
+                        <label class="form-label">副标题</label>
+                        <input type="text" class="form-input" id="article-subtitle"
+                               placeholder="简短描述（可选）">
+                    </div>
+
+                    <!-- 分类标签 -->
+                    <div class="form-group">
+                        <label class="form-label">分类标签 <span class="required">*</span></label>
+                        <select class="form-select" id="article-tag" required>
+                            <option value="">选择分类</option>
+                            <option value="国产替代">国产替代</option>
+                            <option value="设计技术">设计技术</option>
+                            <option value="制造工艺">制造工艺</option>
+                            <option value="芯片分析">芯片分析</option>
+                            <option value="技术对比">技术对比</option>
+                        </select>
+                    </div>
+
+                    <!-- 封面图片 -->
+                    <div class="form-group">
+                        <label class="form-label">封面图片</label>
+                        <input type="text" class="form-input" id="article-cover"
+                               placeholder="图片URL（可选）">
+                    </div>
+
+                    <!-- 权限设置 -->
+                    <div class="form-group">
+                        <label class="form-label">文章权限</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="privacy" value="public" checked>
+                                <span>🌐 公开 - 所有人可见</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="privacy" value="private">
+                                <span>🔒 私有 - 仅自己可见</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 内容统计 -->
+                    <div class="content-stats">
+                        <span class="stat-item">📊 字符数：<strong id="char-count">0</strong></span>
+                        <span class="stat-item">⏱️ 预计阅读：<strong id="read-time">0</strong> 分钟</span>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancel-publish">取消</button>
+                <button type="submit" class="btn-primary" id="confirm-publish">
+                    <span class="btn-text">发布文章</span>
+                    <span class="btn-loading" style="display: none;">
+                        <span class="loading-spinner"></span> 发布中...
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 发布成功提示 -->
+    <div class="toast" id="publish-success-toast">
+        <div class="toast-icon">✅</div>
+        <div class="toast-content">
+            <div class="toast-title">发布成功！</div>
+            <div class="toast-message">
+                文章已发布到：<a href="#" id="article-url-link" class="toast-link"></a>
+            </div>
+            <div class="toast-actions">
+                <button class="toast-btn" id="view-article">查看文章</button>
+                <button class="toast-btn" id="continue-edit">继续编辑</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab 切换功能
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabName = btn.dataset.tab;
+
+                // 更新tab按钮状态
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // 更新tab内容显示
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(tabName + '-tab').classList.add('active');
+            });
+        });
+
+        // 格式选择交互 - 单选模式
+        document.querySelectorAll('.format-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                document.querySelectorAll('.format-chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+            });
+        });
+
+        // 开关交互
+        document.querySelectorAll('.toggle').forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                toggle.classList.toggle('active');
+            });
+        });
+
+        // 文件选择
+        document.querySelectorAll('.file-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                if (!e.target.closest('.file-remove')) {
+                    document.querySelectorAll('.file-item').forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                }
+            });
+        });
+
+        // 文件删除
+        document.querySelectorAll('.file-remove').forEach(removeBtn => {
+            removeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const fileItem = removeBtn.closest('.file-item');
+                fileItem.style.transform = 'translateX(100%)';
+                fileItem.style.opacity = '0';
+                setTimeout(() => {
+                    fileItem.remove();
+                }, 300);
+            });
+        });
+
+        // 文件上传处理
+        const fileUpload = document.getElementById('file-upload');
+        if (fileUpload) {
+            fileUpload.addEventListener('change', (e) => {
+                const files = Array.from(e.target.files);
+                console.log('Selected files:', files);
+            });
+        }
+
+        // 拖拽上传支持
+        const uploadSection = document.querySelector('.upload-section');
+        if (uploadSection) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadSection.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadSection.addEventListener(eventName, () => {
+                    uploadSection.style.borderColor = 'var(--accent-orange)';
+                    uploadSection.style.backgroundColor = 'rgba(217, 119, 87, 0.08)';
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadSection.addEventListener(eventName, () => {
+                    uploadSection.style.borderColor = '';
+                    uploadSection.style.backgroundColor = '';
+                }, false);
+            });
+
+            uploadSection.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (fileUpload) {
+                    fileUpload.files = files;
+                    const event = new Event('change', { bubbles: true });
+                    fileUpload.dispatchEvent(event);
+                }
+            }, false);
+        }
+
+        // 输入框焦点动画
+        const inputContainer = document.querySelector('.input-container input');
+        if (inputContainer) {
+            inputContainer.addEventListener('focus', () => {
+                inputContainer.parentElement.style.transform = 'translateY(-2px)';
+            });
+
+            inputContainer.addEventListener('blur', () => {
+                inputContainer.parentElement.style.transform = '';
+            });
+        }
+
+        // 模拟进度条动画
+        function simulateProgress() {
+            const progressFill = document.querySelector('.progress-fill');
+            const progressContainer = document.querySelector('.progress-container');
+
+            if (progressFill && progressContainer) {
+                progressContainer.style.display = 'block';
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += Math.random() * 15;
+                    if (progress >= 100) {
+                        progress = 100;
+                        clearInterval(interval);
+                        setTimeout(() => {
+                            progressContainer.style.display = 'none';
+                            progressFill.style.width = '0%';
+                        }, 500);
+                    }
+                    progressFill.style.width = progress + '%';
+                }, 200);
+            }
+        }
+
+        // 问答功能
+        const qaMessages = document.getElementById('qa-messages');
+        const qaWelcome = document.getElementById('qa-welcome');
+        const qaTyping = document.getElementById('qa-typing');
+        const qaInput = document.querySelector('.input-container input');
+
+        // 添加消息到对话
+        function addMessage(text, isUser = false) {
+            // 首次发送消息时隐藏欢迎界面
+            if (qaWelcome.style.display !== 'none') {
+                qaWelcome.style.display = 'none';
+                qaMessages.style.display = 'flex';
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `qa-message ${isUser ? 'user' : 'assistant'}`;
+
+            const avatar = document.createElement('div');
+            avatar.className = `qa-avatar ${isUser ? 'user-avatar' : 'assistant-avatar'}`;
+            avatar.textContent = isUser ? 'U' : 'AI';
+
+            const content = document.createElement('div');
+            content.className = 'qa-content';
+            content.innerHTML = text;
+
+            const timestamp = document.createElement('span');
+            timestamp.className = 'qa-timestamp';
+            timestamp.textContent = new Date().toLocaleTimeString('zh-CN', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            content.appendChild(timestamp);
+
+            if (isUser) {
+                messageDiv.appendChild(content);
+                messageDiv.appendChild(avatar);
+            } else {
+                messageDiv.appendChild(avatar);
+                messageDiv.appendChild(content);
+            }
+
+            qaMessages.appendChild(messageDiv);
+            qaMessages.scrollTop = qaMessages.scrollHeight;
+        }
+
+        // 模拟AI回复
+        function simulateAIResponse(question) {
+            qaTyping.classList.add('active');
+            qaMessages.appendChild(qaTyping);
+            qaMessages.scrollTop = qaMessages.scrollHeight;
+
+            setTimeout(() => {
+                qaTyping.classList.remove('active');
+
+                // 根据问题生成回复
+                let response = '';
+                if (question.includes('Pin2Pin') || question.includes('替代')) {
+                    response = '进行 Pin2Pin 芯片替代分析的步骤如下：<br><br>1️⃣ <strong>上传数据表</strong>：在左侧上传区域上传两个待对比芯片的PDF数据表<br>2️⃣ <strong>参数提取</strong>：系统会自动提取关键参数（电压、电流、封装等）<br>3️⃣ <strong>智能对比</strong>：AI 会分析功能、性能、封装等多个维度<br>4️⃣ <strong>生成报告</strong>：自动生成详细的对比分析报告<br><br>💡 <em>建议重点关注：供电电压、输出电流、封装尺寸、引脚定义等关键参数</em>';
+                } else if (question.includes('参数') || question.includes('指标')) {
+                    response = '芯片替代的<strong>关键指标</strong>包括：<br><br>⚡ <strong>电气参数</strong>：供电电压、工作电流、输入输出特性<br>📦 <strong>封装参数</strong>：封装类型、引脚数量、尺寸规格<br>🌡️ <strong>环境参数</strong>：工作温度范围、存储温度<br>⚙️ <strong>功能特性</strong>：核心功能、特殊功能、保护机制<br>📊 <strong>性能指标</strong>：精度、速度、功耗等<br><br>这些参数直接影响替代的可行性和兼容性。';
+                } else if (question.includes('上传') || question.includes('分析')) {
+                    response = '上传和分析芯片数据表很简单：<br><br>📤 <strong>上传方式</strong>：<br>• 点击左侧上传区域选择文件<br>• 或直接拖拽PDF文件到上传区<br>• 最多支持2个文件同时上传<br><br>🔍 <strong>分析流程</strong>：<br>1. 上传完成后，在底部输入框可添加特殊要求<br>2. 点击发送按钮开始分析<br>3. 系统会实时显示分析进度<br>4. 完成后在编辑器或报告页查看结果<br><br>✨ 支持实时流式输出，让您第一时间看到分析结果！';
+                } else if (question.includes('类型') || question.includes('支持')) {
+                    response = '本系统支持多种<strong>芯片类型</strong>的分析：<br><br>🔌 <strong>模拟芯片</strong>：运放、比较器、电源管理等<br>💾 <strong>数字芯片</strong>：逻辑门、触发器、计数器等<br>🔄 <strong>接口芯片</strong>：RS232、CAN、I2C等通信芯片<br>⚙️ <strong>混合信号</strong>：ADC、DAC、时钟芯片等<br>📡 <strong>射频芯片</strong>：放大器、混频器、调制器等<br><br>只要有完整的PDF数据表，系统都能进行智能分析！';
+                } else {
+                    response = '感谢您的提问！我是智能芯片分析助手，专注于帮助您：<br><br>✅ 进行Pin2Pin芯片替代分析<br>✅ 对比芯片关键参数<br>✅ 生成详细的分析报告<br>✅ 提供专业的替代建议<br><br>您可以尝试问我：<br>• 如何进行芯片替代分析<br>• 哪些参数最重要<br>• 如何使用这个系统<br><br>有任何问题随时问我！😊';
+                }
+
+                addMessage(response, false);
+            }, 1500);
+        }
+
+        // 处理问答输入
+        function handleQAInput() {
+            const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
+
+            if (activeTab === 'qa' && qaInput && qaInput.value.trim()) {
+                const question = qaInput.value.trim();
+                addMessage(question, true);
+                qaInput.value = '';
+                simulateAIResponse(question);
+            } else if (activeTab === 'editor') {
+                // 编辑器模式的原有功能
+                simulateProgress();
+            }
+        }
+
+        // 点击开始按钮
+        const startBtn = document.querySelector('.input-btn');
+        if (startBtn) {
+            startBtn.addEventListener('click', handleQAInput);
+        }
+
+        // 回车发送
+        if (qaInput) {
+            qaInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleQAInput();
+                }
+            });
+        }
+
+        // 建议问题点击
+        document.querySelectorAll('.suggestion-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                const question = chip.dataset.question || chip.textContent;
+                if (qaInput) {
+                    qaInput.value = question;
+                    handleQAInput();
+                }
+            });
+        });
+
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // 键盘快捷键
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                const input = document.querySelector('.input-container input');
+                if (input) input.focus();
+            }
+        });
+
+        // ========== 博客发布功能 ==========
+
+        // 获取 DOM 元素
+        const publishBtn = document.getElementById('publish-blog-btn');
+        const publishModal = document.getElementById('publish-modal');
+        const closeModalBtn = document.getElementById('close-publish-modal');
+        const cancelPublishBtn = document.getElementById('cancel-publish');
+        const confirmPublishBtn = document.getElementById('confirm-publish');
+        const publishForm = document.getElementById('publish-form');
+        const editorTextarea = document.querySelector('.editor-pane textarea');
+        const publishToast = document.getElementById('publish-success-toast');
+
+        // 打开发布对话框
+        if (publishBtn) {
+            publishBtn.addEventListener('click', () => {
+                // 获取当前 Markdown 内容
+                const content = editorTextarea.value;
+
+                // 检查内容是否为空
+                if (!content.trim()) {
+                    alert('请先编写 Markdown 内容再发布！');
+                    return;
+                }
+
+                // 更新内容统计
+                updateContentStats(content);
+
+                // 显示对话框
+                publishModal.classList.add('active');
+            });
+        }
+
+        // 关闭对话框
+        function closePublishModal() {
+            publishModal.classList.remove('active');
+            publishForm.reset();
+        }
+
+        if (closeModalBtn) {
+            closeModalBtn.addEventListener('click', closePublishModal);
+        }
+
+        if (cancelPublishBtn) {
+            cancelPublishBtn.addEventListener('click', closePublishModal);
+        }
+
+        // 点击遮罩层关闭
+        if (publishModal) {
+            publishModal.addEventListener('click', (e) => {
+                if (e.target === publishModal) {
+                    closePublishModal();
+                }
+            });
+        }
+
+        // 更新内容统计
+        function updateContentStats(content) {
+            const charCount = content.length;
+            const readTime = Math.ceil(charCount / 400); // 假设每分钟阅读400字
+
+            document.getElementById('char-count').textContent = charCount;
+            document.getElementById('read-time').textContent = readTime;
+        }
+
+        // 自动生成英文标题（拼音转换简化版）
+        const titleInput = document.getElementById('article-title');
+        const enTitleInput = document.getElementById('article-en-title');
+
+        if (titleInput && enTitleInput) {
+            titleInput.addEventListener('input', (e) => {
+                // 简化的 slug 生成（实际应用中需要更完善的拼音转换）
+                const slug = e.target.value
+                    .toLowerCase()
+                    .replace(/\s+/g, '-')
+                    .replace(/[^\w\-\u4e00-\u9fa5]+/g, '')
+                    .substring(0, 50);
+
+                if (slug && !enTitleInput.value) {
+                    enTitleInput.value = slug || 'untitled-article';
+                }
+            });
+        }
+
+        // 表单提交 - 发布文章
+        if (confirmPublishBtn) {
+            confirmPublishBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+
+                // 验证表单
+                const title = document.getElementById('article-title').value.trim();
+                const enTitle = document.getElementById('article-en-title').value.trim();
+                const tag = document.getElementById('article-tag').value;
+
+                if (!title || !enTitle || !tag) {
+                    alert('请填写必填项：标题、英文标题和分类标签');
+                    return;
+                }
+
+                // 收集表单数据
+                const formData = {
+                    title: title,
+                    enTitle: enTitle,
+                    subtitle: document.getElementById('article-subtitle').value.trim(),
+                    tag: tag,
+                    coverImage: document.getElementById('article-cover').value.trim(),
+                    privacy: document.querySelector('input[name="privacy"]:checked').value,
+                    content: editorTextarea.value,
+                    publishTime: new Date().toLocaleString('zh-CN')
+                };
+
+                // 显示加载状态
+                const btnText = confirmPublishBtn.querySelector('.btn-text');
+                const btnLoading = confirmPublishBtn.querySelector('.btn-loading');
+                btnText.style.display = 'none';
+                btnLoading.style.display = 'flex';
+                confirmPublishBtn.disabled = true;
+
+                // 模拟发布过程（1.5秒）
+                setTimeout(() => {
+                    // 恢复按钮状态
+                    btnText.style.display = 'inline';
+                    btnLoading.style.display = 'none';
+                    confirmPublishBtn.disabled = false;
+
+                    // 关闭对话框
+                    closePublishModal();
+
+                    // 显示成功提示
+                    showPublishSuccess(formData);
+
+                    // 控制台输出（开发时查看）
+                    console.log('📝 文章发布数据：', formData);
+                }, 1500);
+            });
+        }
+
+        // 显示发布成功提示
+        function showPublishSuccess(data) {
+            const articleUrl = `/article/${data.enTitle}`;
+            const urlLink = document.getElementById('article-url-link');
+
+            urlLink.textContent = articleUrl;
+            urlLink.href = articleUrl;
+
+            publishToast.classList.add('active');
+
+            // 5秒后自动隐藏
+            setTimeout(() => {
+                publishToast.classList.remove('active');
+            }, 5000);
+        }
+
+        // Toast 按钮操作
+        const viewArticleBtn = document.getElementById('view-article');
+        const continueEditBtn = document.getElementById('continue-edit');
+
+        if (viewArticleBtn) {
+            viewArticleBtn.addEventListener('click', () => {
+                const url = document.getElementById('article-url-link').href;
+                console.log('🔗 跳转到文章：', url);
+                alert(`将跳转到：${url}\n（原型模式，实际开发时会打开真实URL）`);
+                publishToast.classList.remove('active');
+            });
+        }
+
+        if (continueEditBtn) {
+            continueEditBtn.addEventListener('click', () => {
+                publishToast.classList.remove('active');
+                console.log('✏️ 继续编辑');
+            });
+        }
+
+        // ESC 键关闭模态对话框
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && publishModal && publishModal.classList.contains('active')) {
+                closePublishModal();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="layouts/base :: head-common"/>
+    <link rel="stylesheet" th:href="@{/static/css/login.css}">
+    <title>登录 | CHIP AI</title>
+</head>
+<body>
+<nav th:replace="layouts/base :: navbar"></nav>
+
+<main class="login-page">
+    <div class="login-grid">
+        <section class="login-hero">
+            <span class="eyebrow">安全认证</span>
+            <h1>登录 CHIP AI 控制台</h1>
+            <p>
+                进入专属芯片分析工作台，管理 AI 生成记录、Pin2Pin 替代方案与团队协作项目。
+            </p>
+            <div class="login-highlights">
+                <div class="highlight-card">
+                    <h3>团队协同</h3>
+                    <p>与工程同事共享替代方案与分析记录。</p>
+                </div>
+                <div class="highlight-card">
+                    <h3>项目归档</h3>
+                    <p>自动整理数据表、分析报告与成本评估。</p>
+                </div>
+                <div class="highlight-card">
+                    <h3>安全审计</h3>
+                    <p>多层加密与访问控制保障芯片资料安全。</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="login-panel" aria-labelledby="login-title">
+            <div class="login-panel-header">
+                <h2 id="login-title">欢迎回来</h2>
+                <p>使用您的账号继续探索 AI 芯片分析。</p>
+            </div>
+            <form id="loginForm" class="login-form">
+                <label class="form-label" for="username">邮箱/用户名</label>
+                <input type="text" id="username" class="form-input" placeholder="your.email@example.com" required>
+
+                <label class="form-label" for="password">密码</label>
+                <input type="password" id="password" class="form-input" placeholder="••••••••" required>
+
+                <div class="form-row">
+                    <label class="checkbox">
+                        <input type="checkbox" id="remember">
+                        <span>记住我</span>
+                    </label>
+                    <span class="form-helper">使用 RSA 加密提交登录信息</span>
+                </div>
+
+                <button type="submit" class="btn btn-primary login-submit">登录并进入控制台</button>
+                <div id="loginStatus" class="form-message" aria-live="polite"></div>
+            </form>
+        </section>
+    </div>
+</main>
+
+<footer th:replace="layouts/base :: footer"></footer>
+
+<th:block th:replace="layouts/base :: scripts-common"/>
+<script th:src="@{/static/js/jsencrypt.min.js}"></script>
+<script>
+    $(document).ready(function () {
+        const statusEl = $('#loginStatus');
+
+        $('#loginForm').submit(function (e) {
+            e.preventDefault();
+
+            let username = $('#username').val().trim();
+            let password = $('#password').val();
+
+            if (!username || !password) {
+                showMessage('请输入邮箱和密码', 'error');
+                return;
+            }
+
+            const publicKey = "MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAJfxev3T3AP8ClI38wYNWT37I+ut5sbeWD879nE9ceq88Hk4DO6YFj+L20F1afuhxaaX/oaYcYhgxHRXvMDOz3kCAwEAAQ==";
+            const encrypt = new JSEncrypt();
+            encrypt.setPublicKey(publicKey);
+            username = encrypt.encrypt(username);
+            password = encrypt.encrypt(password);
+
+            showMessage('正在登录...', 'loading');
+
+            const form = new FormData();
+            form.append("username", username);
+            form.append("password", password);
+
+            $.ajax({
+                url: "/api/admin/authentication",
+                type: "post",
+                data: form,
+                dataType: "json",
+                processData: false,
+                contentType: false,
+                async: true,
+                timeout: 5000,
+                success: function (data) {
+                    if (data.status === 0) {
+                        showMessage('登录成功，正在跳转...', 'success');
+                        const param = new URLSearchParams(window.location.search);
+                        const redirectUrl = param.get("redirect_url") || "/";
+                        window.location.href = redirectUrl;
+                    } else {
+                        showMessage(data.message, 'error');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    if (status === 'timeout') {
+                        showMessage('请求超时，请检查网络或稍后再试。', "error");
+                    } else {
+                        showMessage('登录失败: ' + error, "error");
+                    }
+                }
+            });
+        });
+
+        function showMessage(message, type) {
+            statusEl.removeClass('is-error is-success is-loading');
+            statusEl.addClass('is-' + type);
+
+            if (type === 'loading') {
+                statusEl.html('<span class="form-message-spinner"></span>' + message);
+            } else {
+                statusEl.text(message);
+            }
+
+            if (type === 'error') {
+                setTimeout(() => statusEl.text('').removeClass('is-error'), 5000);
+            }
+        }
+    });
+</script>
+</body>
+</html>
