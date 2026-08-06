@@ -77,7 +77,7 @@
             <section class="result-container" aria-label="分析工作区">
                 <div class="result-toolbar">
                     <div class="panel-heading"><span class="step-number">02</span><div><p>OUTPUT</p><h2>分析工作区</h2></div></div>
-                    <div class="toolbar-actions"><div class="analysis-indicator"><span></span><span class="analysis-indicator-text">等待分析</span></div><button class="workspace-fullscreen" type="button" aria-label="全屏编辑器" title="全屏编辑器"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button></div>
+                    <div class="toolbar-actions"><div class="analysis-indicator"><span></span><span class="analysis-indicator-text">等待分析</span></div><button class="publish-blog-btn" type="button" title="发布到博客" aria-label="发布到博客"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg><span>发布到博客</span></button><button class="workspace-fullscreen" type="button" aria-label="全屏编辑器" title="全屏编辑器"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button></div>
                 </div>
                 <div class="tab-header" role="tablist" aria-label="分析结果视图">
                     <button class="tab-item active" type="button" role="tab" aria-selected="true" data-tab="markdown"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h10l4 4v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5Z"/><path d="M14 3v5h5M8 13h8M8 17h6"/></svg>Markdown 编辑</button>
@@ -96,6 +96,31 @@
         </div>
         <textarea id="content_hidden" hidden></textarea>
     </section>
+
+    <!-- 发布到博客弹窗 -->
+    <div class="blog-publish-dialog" id="blog-publish-dialog" hidden aria-hidden="true">
+        <div class="blog-publish-backdrop" data-close-publish></div>
+        <div class="blog-publish-panel" role="dialog" aria-modal="true" aria-labelledby="blog-publish-title">
+            <div class="blog-publish-header">
+                <h3 id="blog-publish-title">发布到博客</h3>
+                <button class="blog-publish-close" type="button" data-close-publish aria-label="关闭">&times;</button>
+            </div>
+            <div class="blog-publish-body">
+                <label class="blog-publish-field"><span>标题</span><input type="text" id="blog-publish-title-input" placeholder="文章标题"></label>
+                <label class="blog-publish-field"><span>标签</span><input type="text" id="blog-publish-tag-input" placeholder="如 芯片分析"></label>
+                <label class="blog-publish-field"><span>摘要</span><textarea id="blog-publish-subtitle-input" rows="2" placeholder="一句话摘要（可选）"></textarea></label>
+                <div class="blog-publish-row">
+                    <label class="blog-publish-field"><span>可见性</span><select id="blog-publish-privacy"><option value="public">公开</option><option value="private">仅自己</option></select></label>
+                    <label class="blog-publish-field"><span>封面</span><input type="text" id="blog-publish-cover-input" placeholder="图片 URL（可选）"></label>
+                </div>
+            </div>
+            <div class="blog-publish-footer">
+                <button class="blog-publish-cancel" type="button" data-close-publish>取消</button>
+                <button class="blog-publish-submit" type="button" id="blog-publish-submit">发布</button>
+            </div>
+            <p class="blog-publish-status" id="blog-publish-status" hidden></p>
+        </div>
+    </div>
 </main>
 
 <th:block th:replace="layouts/base :: scripts-common"/>
