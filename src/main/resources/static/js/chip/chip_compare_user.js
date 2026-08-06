@@ -37,6 +37,10 @@ $(document).ready(function () {
 
     $('.format-option input').on('change', function () {
         $(this).closest('.format-option').toggleClass('active', this.checked);
+        if ($(this).attr('name') === 'mode') {
+            const quick = $(this).val() === 'quick';
+            $('.action-hint').text(quick ? '快速结论模式 · 预计 10-25 秒' : '完整报告模式 · 预计 1-1.5 分钟');
+        }
     });
 
     loadBalance();
@@ -295,7 +299,8 @@ function collectRequestData() {
     const $files = $('.file-list li[data-file="true"]');
     return {
         fileList: $files.map(function () { return $(this).find('div').text(); }).get(),
-        chipPartNumberList: $files.map(function () { return $(this).find('input').val().trim(); }).get()
+        chipPartNumberList: $files.map(function () { return $(this).find('input').val().trim(); }).get(),
+        mode: $('input[name="mode"]:checked').val() || 'full'
     };
 }
 

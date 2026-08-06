@@ -98,6 +98,7 @@ public class ChipAnalyzeService {
     public static final String DEFAULT_SYSTEM_PROMPT = "You are an expert chip analysis engineer";
     public static final Float DEFAULT_TEMPERATURE = 0.3f;
     public static final Integer DEFAULT_MAX_TOKENS = 16384;
+    public static final Integer DEFAULT_QUICK_MAX_TOKENS = 3072;
     private static final int STREAM_CHUNK_SIZE = 256;
     private static final int MAX_CONTINUATION_ROUNDS = 2;
 
@@ -184,7 +185,7 @@ public class ChipAnalyzeService {
 
         // 创建session
         Long sessionId = sessionRepository.createSession(Long.valueOf(userId), "pin2pin compare analyze: " + fileList, UUID.randomUUID().toString());
-        String userPrompt = buildUserPrompt(pdfResultList, chipAnalyzeRequest.getUserPrompt());
+        String userPrompt = buildUserPrompt(pdfResultList, chipAnalyzeRequest.getUserPrompt(), chipAnalyzeRequest.getMode());
         userPrompt = appendHistoryContext(userPrompt, chipPartNumberList);
         messageRepository.addMessage(sessionId, Long.valueOf(userId), "user", userPrompt, chipAnalyzeRequest.getModelName(), StatusEnum.VALID.getCode());
 
@@ -383,7 +384,7 @@ public class ChipAnalyzeService {
 
         // 创建session
         Long sessionId = sessionRepository.createSession(Long.valueOf(userId), "pin2pin compare analyze" + fileList, UUID.randomUUID().toString());
-        String userPrompt = buildUserPrompt(results, chipAnalyzeRequest.getUserPrompt());
+        String userPrompt = buildUserPrompt(results, chipAnalyzeRequest.getUserPrompt(), chipAnalyzeRequest.getMode());
         userPrompt = appendHistoryContext(userPrompt, chipPartNumberList);
         messageRepository.addMessage(sessionId, Long.valueOf(userId), "user", userPrompt, chipAnalyzeRequest.getModelName(), StatusEnum.VALID.getCode());
 
@@ -446,11 +447,19 @@ public class ChipAnalyzeService {
             chipAnalyzeRequest.setTemperature(DEFAULT_TEMPERATURE);
         }
         if (chipAnalyzeRequest.getMaxTokens() == null) {
-            chipAnalyzeRequest.setMaxTokens(DEFAULT_MAX_TOKENS);
+            if (isQuickMode(chipAnalyzeRequest.getMode())) {
+                chipAnalyzeRequest.setMaxTokens(DEFAULT_QUICK_MAX_TOKENS);
+            } else {
+                chipAnalyzeRequest.setMaxTokens(DEFAULT_MAX_TOKENS);
+            }
         }
         if (chipAnalyzeRequest.isStream() == null) {
             chipAnalyzeRequest.setStream(true);
         }
+    }
+
+    private boolean isQuickMode(String mode) {
+        return "quick".equalsIgnoreCase(mode);
     }
 
     private JSONObject buildRequestBody(ChipAnalyzeRequest chipAnalyzeRequest, List<ChipPdfResult> chipPdfResultList, String userPrompt) {
@@ -481,8 +490,8 @@ public class ChipAnalyzeService {
         return requestBody;
     }
 
-    private String buildUserPrompt(List<ChipPdfResult> chipDataList, String userPrompt) {
-        String userPromptTemplate = DEFAULT_USER_PROMPT_TEMPLATE;
+    private String buildUserPrompt(List<ChipPdfResult> chipDataList, String userPrompt, String mode) {
+        String userPromptTemplate = isQuickMode(mode) ? QUICK_USER_PROMPT_TEMPLATE : DEFAULT_USER_PROMPT_TEMPLATE;
         if (!StringUtils.isBlank(userPrompt)) {
             userPromptTemplate = userPrompt;
         }
@@ -504,6 +513,22 @@ public class ChipAnalyzeService {
         }
         return String.format(userPromptTemplate, chipContent);
     }
+
+    public static final String QUICK_USER_PROMPT_TEMPLATE = """
+            你是专业芯片选型分析工程师。请对以下芯片数据表做快速 Pin2Pin 替代结论分析。
+            
+            以下是芯片的文本内容：
+            
+            %s
+            
+            # 输出要求（精简，不要展开长报告）：
+            1. 每个芯片一句话定位（厂商、用途）
+            2. 封装与引脚是否 Pin2Pin 兼容（结论 + 例外引脚）
+            3. 关键电气参数差异表（最多 6 行）
+            4. 是否存在不可替代风险（风险项 + 影响 + 缓解）
+            5. 最终替代建议（哪个方向可直接替代、哪个需评估）
+            只输出这 5 部分，使用 Markdown 标题与表格，控制在 600 字以内。
+            """;
 
     public static final String DEFAULT_USER_PROMPT_TEMPLATE = """
             你是一个专业芯片选型分析工程师，负责批量撰写高质量、格式统一的芯片 Pin2Pin 替代分析报告。

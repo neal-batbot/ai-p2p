@@ -11,6 +11,16 @@ public class ChipAnalyzeRequest {
     private Integer maxTokens;
     private String systemPrompt;
     private String userPrompt;
+    /** quick=快速结论, full=完整报告（默认） */
+    private String mode;
+
+    public String getMode() {
+        return mode;
+    }
+
+    public void setMode(String mode) {
+        this.mode = mode;
+    }
 
     public List<String> getChipPartNumberList() {
         return chipPartNumberList;
