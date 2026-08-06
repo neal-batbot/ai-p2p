@@ -95,7 +95,30 @@ public class ChipAnalyzeService {
     @Value("${llm.gpt.model:gpt-4o}")
     private String gptModel;
 
-    public static final String DEFAULT_SYSTEM_PROMPT = "You are an expert chip analysis engineer";
+    public static final String DEFAULT_SYSTEM_PROMPT = "你是专业芯片选型与 Pin2Pin 替代分析工程师。结论必须以输入 datasheet 为证据；资料未给出的参数必须明确标为“未找到/待确认”，不得臆造。";
+
+    /**
+     * ADC 的 Pin2Pin 兼容性不止是封装、引脚和静态电气参数。该规则仅在输入资料识别为 ADC / 数据转换器时
+     * 注入 system message，强制模型核验采样—转换—读出整条时序链。
+     * 依据见 docs/research/adc-timing-comparison.md（ADI 官方技术文章与应用笔记）。
+     */
+    private static final String ADC_TIMING_SYSTEM_PROMPT = """
+
+            # ADC / 数据转换器专项：时序与配置兼容性（强制执行）
+            本次资料包含 ADC 或数据转换器。不能因封装、引脚、分辨率或采样率相同就判定可直接替代；必须将下列采样—转换—读出链作为 Pin2Pin 硬性核验维度。
+
+            1. 采样触发：CONVST/SOC/CS 等触发信号的引脚功能、有效极性、触发边沿、最小脉宽、建立/保持时间。
+            2. 模拟采集：acquisition time、输入建立时间、输入类型（单端/差分/伪差分）、允许源阻抗及前端驱动/RC 滤波是否能在采集窗口内稳定。
+            3. 转换与就绪：conversion time、最小转换周期、BUSY/EOC/DRDY 的时序、有效极性和下一次转换条件。
+            4. 延迟与同步：aperture delay/jitter（适用时）、conversion latency / pipeline delay；Delta-Sigma 还要比较数字滤波 group delay、输出数据率和同步/滤波配置；多通道还要比较同时采样还是复用采样、通道间同步关系。
+            5. 数字读出：SPI 的 CS/SCLK/SDO 时序、CPOL/CPHA、最大 SCLK、帧宽/数据位序、读数窗口和串接模式；若为并口/LVDS/JESD，则比较数据时钟、lane、帧/多帧同步及 FPGA 配置要求。
+            6. 启动与配置：上电、复位、校准、寄存器配置生效、唤醒到首个有效数据的时间要求。
+
+            输出规则：
+            - 优先引用 datasheet 中 Timing Characteristics、Conversion Timing、Serial/Digital Interface Timing、时序图的具体数值与页码/章节；找不到时明确写“资料未找到，待核对”，绝不推测。
+            - 必须输出“ADC 时序与接口兼容性”表，至少包含：核验项、芯片A、芯片B、兼容性/差异、对 MCU/FPGA/前端的影响与验证动作。
+            - 任一触发、转换完成、延迟、数据帧或接口时序不一致时，不得结论为“完全 Pin2Pin”；应判为“需固件/FPGA/外围验证”或“不可直接替代”，并说明风险。
+            """;
     public static final Float DEFAULT_TEMPERATURE = 0.3f;
     public static final Integer DEFAULT_MAX_TOKENS = 16384;
     public static final Integer DEFAULT_QUICK_MAX_TOKENS = 3072;
@@ -478,7 +501,7 @@ public class ChipAnalyzeService {
         JSONArray messages = new JSONArray();
         JSONObject systemMsg = new JSONObject();
         systemMsg.put("role", "system");
-        systemMsg.put("content", chipAnalyzeRequest.getSystemPrompt());
+        systemMsg.put("content", buildSystemPrompt(chipAnalyzeRequest.getSystemPrompt(), chipPdfResultList));
         messages.add(systemMsg);
 
         JSONObject userMsg = new JSONObject();
@@ -488,6 +511,32 @@ public class ChipAnalyzeService {
 
         requestBody.put("messages", messages);
         return requestBody;
+    }
+
+    private String buildSystemPrompt(String requestedSystemPrompt, List<ChipPdfResult> chipDataList) {
+        String basePrompt = StringUtils.defaultIfBlank(requestedSystemPrompt, DEFAULT_SYSTEM_PROMPT);
+        return isAdcOrDataConverter(chipDataList) ? basePrompt + ADC_TIMING_SYSTEM_PROMPT : basePrompt;
+    }
+
+    private boolean isAdcOrDataConverter(List<ChipPdfResult> chipDataList) {
+        if (CollectionUtils.isEmpty(chipDataList)) {
+            return false;
+        }
+        for (ChipPdfResult chipData : chipDataList) {
+            String searchable = StringUtils.defaultString(chipData.getChipModel()) + " "
+                    + StringUtils.defaultString(chipData.getTextContent());
+            String normalized = searchable.toLowerCase();
+            if (normalized.contains("analog-to-digital")
+                    || normalized.contains("a/d converter")
+                    || normalized.contains("adc")
+                    || normalized.contains("模数转换")
+                    || normalized.contains("模數轉換")
+                    || normalized.contains("数据转换器")
+                    || normalized.contains("數據轉換器")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private String buildUserPrompt(List<ChipPdfResult> chipDataList, String userPrompt, String mode) {
@@ -516,68 +565,81 @@ public class ChipAnalyzeService {
 
     public static final String QUICK_USER_PROMPT_TEMPLATE = """
             你是专业芯片选型分析工程师。请对以下芯片数据表做快速 Pin2Pin 替代结论分析。
-            
+
             以下是芯片的文本内容：
-            
+
             %s
-            
+
             # 输出要求（精简，不要展开长报告）：
             1. 每个芯片一句话定位（厂商、用途）
             2. 封装与引脚是否 Pin2Pin 兼容（结论 + 例外引脚）
             3. 关键电气参数差异表（最多 6 行）
-            4. 是否存在不可替代风险（风险项 + 影响 + 缓解）
-            5. 最终替代建议（哪个方向可直接替代、哪个需评估）
-            只输出这 5 部分，使用 Markdown 标题与表格，控制在 600 字以内。
+            4. 若资料为 ADC / 数据转换器：增加“时序与接口”小表，至少核验采样触发、转换完成/BUSY/DRDY、转换/数字滤波延迟、SPI/数字接口模式；资料未给出时写“待核对”，不可臆造
+            5. 是否存在不可替代风险（风险项 + 影响 + 缓解）
+            6. 最终替代建议（哪个方向可直接替代、哪个需评估）
+            只输出这 6 部分，使用 Markdown 标题与表格，控制在 800 字以内。
             """;
 
     public static final String DEFAULT_USER_PROMPT_TEMPLATE = """
             你是一个专业芯片选型分析工程师，负责批量撰写高质量、格式统一的芯片 Pin2Pin 替代分析报告。
-            
+
             # 📎 输入信息：
             你收到若干芯片的 datasheet 解析结果，包括型号、品牌、电气参数、功能描述、引脚定义和应用场景。
-            
+
             以下是芯片的文本内容：
-            
+
             %s
-            
+
             # 🎯 分析目标：
-            请针对这些芯片，进行结构化的 Pin2Pin 对比分析，最终输出为 Markdown 格式的技术报告，包括以下 6 大章节：
-            
+            请针对这些芯片，进行结构化的 Pin2Pin 对比分析，最终输出为 Markdown 格式的技术报告，包括以下 7 大章节：
+
             ## 1. 产品定义和目标应用对比
-            
-            简要介绍每个芯片解决的问题、产品定位、目标应用领域。强调三者的共性与差异。
-            
+
+            简要介绍每个芯片解决的问题、产品定位、目标应用领域。强调各芯片的共性与差异。
+
             ## 2. 封装与引脚布局对比（Pin-to-Pin表格）
-            
+
             输出完整的引脚对照表，并说明是否可以物理 Pin2Pin 替代，是否需要修改 PCB，是否有功能不匹配的引脚。
-            
+
             ## 3. 电气特性全面对比
-            
+
             用表格列出关键电气参数（如输入电压、输出电流、Vos、PSRR、CMRR、带宽等），并逐项说明：
             - 哪个芯片性能最优 ✅
             - 哪个芯片存在短板 ⚠️
             - 是否可替代？是否存在风险？
-            
-            ## 4. 功能模块特性对比
-            
+
+            ## 4. ADC 时序与接口兼容性（仅当资料为 ADC / 数据转换器时必须输出）
+
+            若输入资料为 ADC / 数据转换器，必须单独输出时序核验表，至少包含：
+            - 采样触发（CONVST/SOC/CS）的极性、边沿、最小脉宽及建立/保持时间
+            - acquisition time / 输入建立时间、输入类型、前端驱动与 RC 滤波的建立风险
+            - conversion time、最小转换周期、BUSY/EOC/DRDY 时序和下一次转换条件
+            - aperture delay/jitter（适用时）、conversion latency / pipeline delay；Delta-Sigma 的数字滤波延迟、输出数据率和同步配置；多通道的同时/复用采样关系
+            - SPI（CS/SCLK/SDO、CPOL/CPHA、最大 SCLK、帧宽/位序/读出窗口）或 LVDS/JESD/并口的数据与同步要求
+            - 上电、复位、校准、寄存器配置和首个有效数据的等待要求
+
+            每一项应写出数据、兼容性及对 MCU/FPGA/前端的影响。资料未提供时明确写“待核对 datasheet”，不得推测。任一项不一致时，不得判定为完全 Pin2Pin。
+
+            ## 5. 功能模块特性对比
+
             说明这些芯片的内部功能模块（如零漂移、双参考输入、抗PWM设计等）是否一致，以及它们在抗干扰、温漂、稳定性方面的差异。
-            
-            ## 5. 典型应用适配性分析（按场景分类）
-            
+
+            ## 6. 典型应用适配性分析（按场景分类）
+
             请列出三种应用场景：
             - 每种场景下推荐哪款芯片？
             - 替代建议是什么？用表格列出说明。
-            
-            ## 6. Pin2Pin替代可行性总结与风险分析
-            
+
+            ## 7. Pin2Pin替代可行性总结与风险分析
+
             总结这些芯片之间互相替代的可行性，列出：
             - 哪些方向可以完全替代 ✅
             - 哪些方向存在参数风险 ⚠️
             - 哪些方向存在封装、电压不兼容等问题 ❌
             - 总结表格 + 替代建议
-            
+
             # ⚠️ 输出格式：
-            
+
             - 采用 Markdown 结构
             - 使用清晰的标题（# / ## / ###）
             - 所有对比表格使用三列以上格式
