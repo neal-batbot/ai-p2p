@@ -1,0 +1,15 @@
+# 测试环境（集成测试 / CI）
+# 用于 GitHub Actions 的 MySQL 服务与本地集成测试，库名 chip_test。
+# 启动：SPRING_PROFILES_ACTIVE=test ./mvnw test
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/chip_test?characterEncoding=utf-8&serverTimezone=UTC}
+    username: ${DB_USERNAME:chip}
+    password: ${DB_PASSWORD:chip}
+
+server:
+  port: ${SERVER_PORT:18080}
+
+logging:
+  level:
+    com.babata.chip: INFO

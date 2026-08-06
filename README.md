@@ -85,6 +85,20 @@ export DEEPSEEK_API_KEY=your_key
 
 访问 `http://localhost/`（默认账号见本地配置）。
 
+## 环境（Profile）分离
+
+不同环境通过 Spring Profile + 环境变量隔离，密钥不入库：
+
+| Profile | 用途 | 配置来源 | 启动方式 |
+| --- | --- | --- | --- |
+| `local` | 本机开发 | `application-local.yml`（**不入库**） | `./mvnw spring-boot:run`（默认） |
+| `dev` | 开发环境 | `application-dev.yml` + 环境变量 | `scripts/run-dev.sh` |
+| `test` | 集成测试 | `application-test.yml`（库 `chip_test`） | `SPRING_PROFILES_ACTIVE=test ./mvnw test` |
+| `ci` | GitHub Actions | `application-ci.yml`（MySQL service） | CI 自动 |
+| `prod` | 生产环境 | `application-prod.yml`，敏感变量缺失即拒绝启动 | `scripts/run-prod.sh` |
+
+生产环境会校验 `DB_URL/DB_USERNAME/DB_PASSWORD/RSA_*/DEEPSEEK_API_KEY/ALIPAY_*` 等必需变量，缺失直接退出，避免带空密钥启动。
+
 ## 环境变量
 
 敏感配置全部通过环境变量注入，仓库不保留任何明文凭据：

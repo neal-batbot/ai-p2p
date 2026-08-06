@@ -1,0 +1,15 @@
+# CI 环境（GitHub Actions）
+# 与 ci.yml 中的 MySQL service 对齐：库 chip，用户 chip/chip。
+# 本地复现：SPRING_PROFILES_ACTIVE=ci ./mvnw test
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:3306/chip?characterEncoding=utf-8&serverTimezone=UTC}
+    username: ${DB_USERNAME:chip}
+    password: ${DB_PASSWORD:chip}
+
+server:
+  port: ${SERVER_PORT:18080}
+
+logging:
+  level:
+    com.babata.chip: INFO
