@@ -85,6 +85,7 @@ public class UserBalanceService {
             balance.setTotalBalance(BigDecimal.valueOf(0.0));
             balance.setTotalCnt(0);
             balance.setChargeType((byte) 0);
+            balance.setVersion(0);
             balance.setCreateTime(new Date());
             balance.setModifyTime(new Date());
             userBalanceRepository.save(balance);

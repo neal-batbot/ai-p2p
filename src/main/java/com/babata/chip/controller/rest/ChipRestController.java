@@ -108,6 +108,9 @@ public class ChipRestController {
         if (CollectionUtils.isEmpty(request.getFileList())) {
             return buildErrorResponse("fileList is empty");
         }
+        if (request.getFileList().size() < 2 || request.getFileList().size() > 5) {
+            return buildErrorResponse("Please provide between 2 and 5 PDF files.");
+        }
         String result = chipAnalyzeService.analyze(request);
         return buildSuccessResponse(result);
     }
@@ -117,10 +120,10 @@ public class ChipRestController {
     public SseEmitter analyzeChip(@RequestBody ChipAnalyzeRequest request, HttpServletRequest httpServletRequest) throws IOException {
         UserContext uc = UserCache.getUserContext();
         log.info("ChipRestController.analyzeChip, request: {}, username:{}", request, uc.getUsername());
-        SseEmitter emitter = new SseEmitter(180_000L);
+        SseEmitter emitter = new SseEmitter(300_000L);
         // 参数校验
-        if (CollectionUtils.isEmpty(request.getFileList()) || request.getFileList().size() < 2) {
-            LlmStreamResponse r = new LlmStreamResponse("error", "fileList is empty or not enough!");
+        if (CollectionUtils.isEmpty(request.getFileList()) || request.getFileList().size() < 2 || request.getFileList().size() > 5) {
+            LlmStreamResponse r = new LlmStreamResponse("error", "Please provide between 2 and 5 PDF files.");
             emitter.send(JSON.toJSONString(r));
             return emitter;
         }

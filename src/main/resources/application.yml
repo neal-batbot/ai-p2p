@@ -29,6 +29,8 @@ llm:
     api-url: ${DEEPSEEK_API_URL:https://api.deepseek.com/v1/chat/completions}
     api-key: ${DEEPSEEK_API_KEY:}
     model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
+    # Set to low/medium/high when hidden reasoning is desired; none favors interactive report latency.
+    reasoning-effort: ${DEEPSEEK_REASONING_EFFORT:none}
   volc:
     api-url: ${VOLC_API_URL:https://ark.cn-beijing.volces.com/api/v3/chat/completions}
     api-key: ${VOLC_API_KEY:}

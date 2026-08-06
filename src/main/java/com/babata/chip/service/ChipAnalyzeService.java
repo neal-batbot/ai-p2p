@@ -9,6 +9,7 @@ import com.babata.chip.common.enums.ChipCompareStatusEnum;
 import com.babata.chip.common.enums.StatusEnum;
 import com.babata.chip.common.request.ChipAnalyzeRequest;
 import com.babata.chip.common.response.LlmStreamResponse;
+import com.babata.chip.common.response.deepseek.Choice;
 import com.babata.chip.common.response.deepseek.DeepSeekResponse;
 import com.babata.chip.common.result.ChipPdfResult;
 import com.babata.chip.repository.MessageRepository;
@@ -73,6 +74,9 @@ public class ChipAnalyzeService {
     @Value("${llm.deepseek.model:deepseek-v4-flash}")
     private String deepSeekModel;
 
+    @Value("${llm.deepseek.reasoning-effort:none}")
+    private String deepSeekReasoningEffort;
+
     @Value("${llm.volc.api-url:https://ark.cn-beijing.volces.com/api/v3/chat/completions}")
     private String volcApiUrl;
 
@@ -93,7 +97,9 @@ public class ChipAnalyzeService {
 
     public static final String DEFAULT_SYSTEM_PROMPT = "You are an expert chip analysis engineer";
     public static final Float DEFAULT_TEMPERATURE = 0.3f;
-    public static final Integer DEFAULT_MAX_TOKENS = 8192;
+    public static final Integer DEFAULT_MAX_TOKENS = 16384;
+    private static final int STREAM_CHUNK_SIZE = 256;
+    private static final int MAX_CONTINUATION_ROUNDS = 2;
 
     private static final String HISTORY_CONTEXT_TEMPLATE = """
             \n\n# 📚 历史分析参考（来自历史对比记录库）\n\n以下是对应芯片的历史分析摘要，请参考它们保持结论一致性：\n\n%s""";
@@ -140,6 +146,7 @@ public class ChipAnalyzeService {
     public void analyzeWithStream(SseEmitter emitter, ChipAnalyzeRequest chipAnalyzeRequest, UserContext userContext) throws IOException, InterruptedException {
         Integer userId = userContext.getUserid();
         fillDefaultParams(chipAnalyzeRequest);
+        sendProgress(emitter, 15, "正在解析 PDF 文本与表格");
 
         // 解析pdf
         long t1 = System.currentTimeMillis();
@@ -166,6 +173,7 @@ public class ChipAnalyzeService {
         }
 
         long t2 = System.currentTimeMillis();
+        sendProgress(emitter, 40, "正在提取芯片型号与关键参数");
 
         // 芯片库沉淀：把本次分析的芯片录入 chip 表
         try {
@@ -182,6 +190,7 @@ public class ChipAnalyzeService {
 
         // 构建http-body
         JSONObject requestBody = buildRequestBody(chipAnalyzeRequest, pdfResultList, userPrompt);
+        sendProgress(emitter, 60, "正在调用模型进行 Pin2Pin 对比分析");
 
         String apiUrl = deepSeekApiUrl, apiKey = deepSeekApiKey;
         String actualModel = deepSeekModel;
@@ -195,54 +204,98 @@ public class ChipAnalyzeService {
 
         logger.info("analyzeWithStream, llm apiUrl:{}, request body: {}", apiUrl, JSON.toJSONString(requestBody));
 
-        // 声明响应变量，扩大作用域
+        // Keep LLM read time separate from browser SSE forwarding time for performance diagnosis.
         HttpResponse<InputStream> response = null;
         StringBuilder buffer = new StringBuilder();
+        long llmRequestStartedAt = System.currentTimeMillis();
+        long firstTokenAt = 0L;
+        long sseForwardingMs = 0L;
+        int forwardedChunks = 0;
 
         try {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(apiUrl))
-                    .header("Authorization", "Bearer " + apiKey)
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(requestBody.toJSONString()))
-                    .timeout(Duration.ofSeconds(180))
-                    .build();
-
-            // 请求LLM-API
             HttpClient client = HttpClient.newHttpClient();
-            response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+            JSONObject currentBody = requestBody;
+            String finishReason = null;
+            int continuationRounds = 0;
+            boolean truncated = true;
+            while (truncated && continuationRounds <= MAX_CONTINUATION_ROUNDS) {
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(apiUrl))
+                        .header("Authorization", "Bearer " + apiKey)
+                        .header("Content-Type", "application/json")
+                        .POST(HttpRequest.BodyPublishers.ofString(currentBody.toJSONString()))
+                        .timeout(Duration.ofSeconds(180))
+                        .build();
 
-            // 处理响应流
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(response.body()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    if (line.isEmpty()) {
-                        continue;
-                    }
-                    if (line.startsWith("data:")) {
-                        line = line.substring(5).trim();
-                    }
-                    if (line.equals("[DONE]")) {
-                        break;
-                    }
-                    // 解析
-                    DeepSeekResponse resp = JSON.parseObject(line, DeepSeekResponse.class);
-                    if (!CollectionUtils.isEmpty(resp.getChoices()) && resp.getChoices().get(0).getDelta() != null) {
-                        // 通过 SseEmitter 将 content 数据发送到前端
-                        String content = resp.getChoices().get(0).getDelta().getContent();
-                        if (!StringUtils.isEmpty(content)) {
-                            totalResult.append(content);
-                            buffer.append(content);
-                            if (buffer.length() > 10) {
-                                LlmStreamResponse streamResponse = new LlmStreamResponse("message", buffer.toString());
-                                String j = JSON.toJSONString(streamResponse);
-                                emitter.send(j);
-                                buffer.setLength(0); // 清空buffer
+                // 请求LLM-API
+                response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+                long firstByteAt = System.currentTimeMillis();
+                if (continuationRounds == 0) {
+                    logger.info("[ANALYSIS_TIMING] llm headers received in {} ms, status={}",
+                            firstByteAt - llmRequestStartedAt, response.statusCode());
+                }
+
+                // 处理响应流
+                finishReason = null;
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(response.body()))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        if (line.isEmpty()) {
+                            continue;
+                        }
+                        if (line.startsWith("data:")) {
+                            line = line.substring(5).trim();
+                        }
+                        if (line.equals("[DONE]")) {
+                            break;
+                        }
+                        // 解析
+                        DeepSeekResponse resp = JSON.parseObject(line, DeepSeekResponse.class);
+                        if (!CollectionUtils.isEmpty(resp.getChoices()) && resp.getChoices().get(0).getDelta() != null) {
+                            Choice choice = resp.getChoices().get(0);
+                            // 通过 SseEmitter 将 content 数据发送到前端
+                            String content = choice.getDelta().getContent();
+                            if (!StringUtils.isEmpty(content)) {
+                                if (firstTokenAt == 0L) {
+                                    firstTokenAt = System.currentTimeMillis();
+                                    logger.info("[ANALYSIS_TIMING] first token received in {} ms", firstTokenAt - llmRequestStartedAt);
+                                }
+                                totalResult.append(content);
+                                buffer.append(content);
+                                if (buffer.length() >= STREAM_CHUNK_SIZE) {
+                                    long sendStartedAt = System.currentTimeMillis();
+                                    emitter.send(JSON.toJSONString(new LlmStreamResponse("message", buffer.toString())));
+                                    sseForwardingMs += System.currentTimeMillis() - sendStartedAt;
+                                    forwardedChunks++;
+                                    buffer.setLength(0);
+                                }
+                            }
+                            if (!StringUtils.isEmpty(choice.getFinishReason())) {
+                                finishReason = choice.getFinishReason();
                             }
                         }
                     }
                 }
+                if (!buffer.isEmpty()) {
+                    long sendStartedAt = System.currentTimeMillis();
+                    emitter.send(JSON.toJSONString(new LlmStreamResponse("message", buffer.toString())));
+                    sseForwardingMs += System.currentTimeMillis() - sendStartedAt;
+                    forwardedChunks++;
+                    buffer.setLength(0);
+                }
+                truncated = "length".equals(finishReason);
+                logger.info("[ANALYSIS_TIMING] llm round {} finished; finishReason={}; cumulativeChars={}",
+                        continuationRounds, finishReason == null ? "stop" : finishReason, totalResult.length());
+                if (truncated && continuationRounds < MAX_CONTINUATION_ROUNDS) {
+                    currentBody = buildContinuationBody(actualModel, totalResult.toString());
+                    sendProgress(emitter, 70, "报告较长，正在自动续写剩余内容");
+                }
+                continuationRounds++;
             }
+            logger.info("[ANALYSIS_TIMING] llm stream complete in {} ms; firstToken={} ms; forwardedChunks={}; sseForwarding={} ms; outputChars={}",
+                    System.currentTimeMillis() - llmRequestStartedAt,
+                    firstTokenAt == 0L ? -1 : firstTokenAt - llmRequestStartedAt,
+                    forwardedChunks, sseForwardingMs, totalResult.length());
         } catch (Exception e) {
             logger.error("DeepSeek stream response error", e);
             long t3 = System.currentTimeMillis();
@@ -256,13 +309,58 @@ public class ChipAnalyzeService {
             return;
         }
         long t3 = System.currentTimeMillis();
+        sendProgress(emitter, 90, "正在保存分析报告与芯片库记录");
         logger.info("analyze finished, took: {} ms", (t3 - t2));
         // 记录芯片对比日志
         chipCompareRecordService.addRecord(userId, chipPartNumberList.get(0), chipPartNumberList.get(1), fileList.toString(), ChipCompareStatusEnum.SUCCESS.getCode(), userPrompt, "",
                 chipAnalyzeRequest.getModelName(), 0, 0, 0, Math.toIntExact(t3 - t2), totalResult.toString());
         // 记录会话
         messageRepository.addMessage(sessionId, Long.valueOf(userId), "assistant", totalResult.toString(), chipAnalyzeRequest.getModelName(), StatusEnum.VALID.getCode());
+        sendProgress(emitter, 100, "分析完成");
         emitter.complete();
+    }
+
+    private void sendProgress(SseEmitter emitter, int progress, String message) throws IOException {
+        LlmStreamResponse response = new LlmStreamResponse("progress", message);
+        response.setProgress(progress);
+        emitter.send(JSON.toJSONString(response));
+    }
+
+    /**
+     * Builds a follow-up streaming request when the previous round was truncated by max_tokens.
+     * Only the tail of the already generated report is sent as context to avoid re-billing the whole prompt.
+     */
+    private JSONObject buildContinuationBody(String model, String partialReport) {
+        JSONObject body = new JSONObject();
+        body.put("model", model);
+        body.put("temperature", DEFAULT_TEMPERATURE);
+        body.put("max_tokens", DEFAULT_MAX_TOKENS);
+        body.put("stream", true);
+        if (Objects.equals(model, deepSeekModel) && StringUtils.isNotBlank(deepSeekReasoningEffort)) {
+            body.put("reasoning_effort", deepSeekReasoningEffort);
+        }
+
+        JSONArray messages = new JSONArray();
+        JSONObject systemMsg = new JSONObject();
+        systemMsg.put("role", "system");
+        systemMsg.put("content", "你是专业芯片选型分析工程师。请严格从上次中断的位置继续输出，不要重复已输出的内容。");
+        messages.add(systemMsg);
+
+        JSONObject assistantMsg = new JSONObject();
+        assistantMsg.put("role", "assistant");
+        String tail = partialReport.length() > 4000
+                ? partialReport.substring(partialReport.length() - 4000)
+                : partialReport;
+        assistantMsg.put("content", tail);
+        messages.add(assistantMsg);
+
+        JSONObject userMsg = new JSONObject();
+        userMsg.put("role", "user");
+        userMsg.put("content", "上面是已生成报告的尾部。请直接从断点继续输出，接着补全剩余表格和章节，不要重复。");
+        messages.add(userMsg);
+
+        body.put("messages", messages);
+        return body;
     }
 
     // 非流式
@@ -362,6 +460,11 @@ public class ChipAnalyzeService {
         requestBody.put("temperature", chipAnalyzeRequest.getTemperature());
         requestBody.put("max_tokens", chipAnalyzeRequest.getMaxTokens());
         requestBody.put("stream", chipAnalyzeRequest.isStream());
+        // Flash is used for interactive analysis. Disable hidden chain-of-thought so the report streams immediately.
+        if (Objects.equals(chipAnalyzeRequest.getModelName(), deepSeekModel)
+                && StringUtils.isNotBlank(deepSeekReasoningEffort)) {
+            requestBody.put("reasoning_effort", deepSeekReasoningEffort);
+        }
 
         JSONArray messages = new JSONArray();
         JSONObject systemMsg = new JSONObject();
