@@ -412,3 +412,78 @@ function analyze() {
         }
     });
 }
+
+/* ===== 发布到博客（项目自有博客系统） ===== */
+function extractTitleFromMarkdown(md) {
+    const match = md.match(/^#\s+(.+)$/m);
+    return match ? match[1].trim() : '';
+}
+
+function extractFirstParagraph(md) {
+    const match = md.match(/^([^#\n].{20,})$/m);
+    return match ? match[1].trim().slice(0, 100) : '';
+}
+
+function openBlogPublishDialog() {
+    // 编辑器内容是最新报告（含用户手工编辑），优先读取
+    const editorContent = getMdEditorContent();
+    const content = (typeof editorContent === 'string' && editorContent.trim()) ? editorContent : reportMarkdown;
+    if (!content.trim()) {
+        alert('当前没有可发布的内容，请先完成一次分析。');
+        return;
+    }
+    window.__publishContent = content;
+    $('#blog-publish-title-input').val(extractTitleFromMarkdown(content) || 'Pin2Pin 替代分析报告');
+    $('#blog-publish-tag-input').val('芯片分析');
+    $('#blog-publish-subtitle-input').val(extractFirstParagraph(content));
+    $('#blog-publish-cover-input').val('');
+    $('#blog-publish-privacy').val('public');
+    $('#blog-publish-status').attr('hidden', true).text('');
+    $('#blog-publish-dialog').attr('hidden', false).attr('aria-hidden', 'false');
+}
+
+function closeBlogPublishDialog() {
+    $('#blog-publish-dialog').attr('hidden', true).attr('aria-hidden', 'true');
+}
+
+$('.publish-blog-btn').on('click', openBlogPublishDialog);
+$('[data-close-publish]').on('click', closeBlogPublishDialog);
+
+$('#blog-publish-submit').on('click', function () {
+    const $btn = $(this);
+    const title = $('#blog-publish-title-input').val().trim();
+    if (!title) {
+        $('#blog-publish-status').removeAttr('hidden').text('请填写标题').css('color', 'var(--danger)');
+        return;
+    }
+    const content = window.__publishContent || '';
+    const params = new URLSearchParams();
+    params.set('title', title);
+    params.set('tag', $('#blog-publish-tag-input').val().trim() || '芯片分析');
+    params.set('subtitle', $('#blog-publish-subtitle-input').val().trim());
+    params.set('enTitle', '');
+    params.set('privacy', $('#blog-publish-privacy').val());
+    params.set('coverImage', $('#blog-publish-cover-input').val().trim());
+    params.set('content', content);
+
+    $btn.prop('disabled', true).text('发布中…');
+    $('#blog-publish-status').removeAttr('hidden').text('正在发布…').css('color', 'var(--green-deep)');
+
+    $.ajax({
+        url: '/api/article/add', type: 'POST', data: params.toString(),
+        headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
+        success: function (response) {
+            $btn.prop('disabled', false).text('发布');
+            if (response && response.status === 0) {
+                $('#blog-publish-status').text('发布成功，正在前往博客…').css('color', 'var(--green-deep)');
+                window.setTimeout(() => { window.location.href = '/blog'; }, 900);
+            } else {
+                $('#blog-publish-status').text('发布失败：' + ((response && response.message) || '未知错误')).css('color', 'var(--danger)');
+            }
+        },
+        error: function (xhr) {
+            $btn.prop('disabled', false).text('发布');
+            $('#blog-publish-status').text('发布失败：' + (xhr.responseText || xhr.statusText)).css('color', 'var(--danger)');
+        }
+    });
+});
