@@ -4,6 +4,7 @@ public class LlmStreamResponse {
     private String type;
     private String content;
     private boolean isFinished;
+    private Integer progress;
 
     public LlmStreamResponse(String content) {
         this.content = content;
@@ -40,6 +41,14 @@ public class LlmStreamResponse {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public Integer getProgress() {
+        return progress;
+    }
+
+    public void setProgress(Integer progress) {
+        this.progress = progress;
     }
 
     public boolean isFinished() {
