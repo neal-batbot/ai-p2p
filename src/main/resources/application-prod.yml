@@ -1,0 +1,45 @@
+# 生产环境（敏感值全部来自环境变量，本文件可提交）
+# 启动：SPRING_PROFILES_ACTIVE=prod ./mvnw spring-boot:run
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  servlet:
+    multipart:
+      max-file-size: 512MB
+      max-request-size: 512MB
+
+server:
+  port: ${SERVER_PORT:80}
+
+rsa:
+  public: ${RSA_PUBLIC_KEY}
+  private: ${RSA_PRIVATE_KEY}
+
+llm:
+  default-model: ${LLM_DEFAULT_MODEL:deepseek-v4-flash}
+  deepseek:
+    api-url: ${DEEPSEEK_API_URL:https://api.deepseek.com/v1/chat/completions}
+    api-key: ${DEEPSEEK_API_KEY}
+    model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
+    reasoning-effort: ${DEEPSEEK_REASONING_EFFORT:none}
+  volc:
+    api-url: ${VOLC_API_URL:https://ark.cn-beijing.volces.com/api/v3/chat/completions}
+    api-key: ${VOLC_API_KEY:}
+    model: ${VOLC_MODEL:deepseek-v3-2-251201}
+  gpt:
+    api-url: ${GPT_API_URL:https://api.942ai.com/v1/chat/completions}
+    api-key: ${GPT_API_KEY:}
+    model: ${GPT_MODEL:gpt-4o}
+
+alipay:
+  app-id: ${ALIPAY_APP_ID}
+  private-key: ${ALIPAY_PRIVATE_KEY}
+  public-key: ${ALIPAY_PUBLIC_KEY}
+  notify-url: ${ALIPAY_NOTIFY_URL}
+  return-url: ${ALIPAY_RETURN_URL}
+
+logging:
+  level:
+    com.babata.chip: INFO
