@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="layouts/base :: head-common"/>
+    <link rel="stylesheet" th:href="@{/static/css/chip/application_selection.css(v=20260806-1)}">
+    <title>应用选型 | CHIP AI</title>
+</head>
+<body>
+<nav th:replace="layouts/base :: navbar"></nav>
+<main class="selection-page">
+    <section class="selection-hero">
+        <div class="hero-copy">
+            <p class="eyebrow"><span></span>APPLICATION-LED SELECTION</p>
+            <h1>先说清楚<br><em>你要解决的应用问题。</em></h1>
+            <p>模拟芯片没有脱离场景的“最好”。告诉我们信号、通道和优先级，先找到适合的候选，再用 Pin2Pin 验证能否替换。</p>
+        </div>
+        <div class="hero-note"><span>01</span><strong>场景比参数更先</strong><small>只填写会影响决策的约束</small></div>
+    </section>
+
+    <section class="selection-layout">
+        <form class="scenario-form" id="scenario-form">
+            <div class="form-heading"><span class="step-number">01</span><div><p>DEFINE CONTEXT</p><h2>定义应用场景</h2></div></div>
+            <label class="field-label" for="scenario">我正在做什么？</label>
+            <select id="scenario" class="field-control">
+                <option value="industrial-daq">工业多通道数据采集</option>
+                <option value="sensor-conditioning">传感器信号调理</option>
+                <option value="motor-control">电机控制采样</option>
+                <option value="bms">电池管理 / BMS</option>
+            </select>
+            <div class="field-grid">
+                <div><label class="field-label" for="signal">输入信号</label><select id="signal" class="field-control"><option>±10 V</option><option>0 - 10 V</option><option>4 - 20 mA</option><option>低电平传感器</option></select></div>
+                <div><label class="field-label" for="channels">通道数量</label><select id="channels" class="field-control"><option>8 路</option><option>4 路</option><option>16 路</option><option>单通道</option></select></div>
+                <div><label class="field-label" for="rate">目标采样率</label><select id="rate" class="field-control"><option>100 - 200 kSPS</option><option>低于 100 kSPS</option><option>200 - 1000 kSPS</option><option>1 MSPS 以上</option></select></div>
+                <div><label class="field-label" for="priority">最优先考虑</label><select id="priority" class="field-control"><option>外围简单</option><option>精度与噪声</option><option>成本与供货</option><option>低功耗</option></select></div>
+            </div>
+            <label class="field-label" for="notes">还有什么必须满足？<span>可选</span></label>
+            <textarea id="notes" class="field-control field-textarea" placeholder="例如：需要与现有 SPI 接口兼容，现场干扰较强……"></textarea>
+            <button class="selection-submit" type="submit"><span>生成场景推荐</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+            <p class="form-footnote">推荐结果用于缩小选型范围，最终设计仍需依据完整数据手册验证。</p>
+        </form>
+
+        <section class="recommendation-panel" aria-live="polite">
+            <div class="form-heading result-heading"><span class="step-number">02</span><div><p>SCENE MATCH</p><h2>场景推荐</h2></div><span class="match-count">3 个候选</span></div>
+            <div id="recommendation-content">
+                <article class="recommendation-card featured"><div class="card-top"><div><span class="rank">01</span><h3>AD7606</h3><p>Analog Devices · 16 位 SAR ADC</p></div><span class="match-score">94<span>%</span></span></div><p class="match-summary">适合 8 路工业同步采集：输入范围和通道配置贴合当前场景，集成度有助于减少前端外围。</p><div class="reason-list"><span>✓ 8 路同步采样</span><span>✓ 支持 ±10 V 输入</span><span>✓ 200 kSPS</span></div><div class="card-actions"><a href="/chip/compare" class="compare-link">与现有型号做 Pin2Pin <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a><button type="button" class="details-button">查看场景卖点</button></div><div class="card-detail"><strong>需要验证</strong><p>确认 SPI 时序、参考电压与输入保护在当前板级设计中匹配。</p></div></article>
+                <article class="recommendation-card"><div class="card-top"><div><span class="rank">02</span><h3>LHA6958D</h3><p>国产替代候选 · 16 位 SAR ADC</p></div><span class="match-score">87<span>%</span></span></div><p class="match-summary">参数区间接近，适合作为国产替代候选进入下一轮 Pin2Pin 核验。</p><div class="reason-list"><span>✓ 8 路采集</span><span>✓ 工业输入范围</span></div><div class="card-actions"><a href="/chip/compare" class="compare-link">进入 Pin2Pin 验证 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div></article>
+                <article class="recommendation-card compact"><div class="card-top"><div><span class="rank">03</span><h3>ADS8688</h3><p>Texas Instruments · 16 位 ADC</p></div><span class="match-score">79<span>%</span></span></div><p class="match-summary">输入范围和通道数匹配，适合对采样性能有更高要求的方案评估。</p><div class="card-actions"><a href="/chip/compare" class="compare-link">进入 Pin2Pin 验证 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div></article>
+            </div>
+        </section>
+    </section>
+    <section class="selection-principle"><span>ENGINEERING PRINCIPLE</span><p>推荐不是寻找参数最大的一颗料，而是找到在当前应用里，能以更低风险完成目标的方案。</p></section>
+</main>
+<th:block th:replace="layouts/base :: footer"/>
+<th:block th:replace="layouts/base :: scripts-common"/>
+<script th:src="@{/static/js/chip/application_selection.js(v=20260806-1)}"></script>
+</body>
+</html>
