@@ -560,7 +560,18 @@ public class ChipAnalyzeService {
             }
             chipContent.append("\n\n");
         }
-        return String.format(userPromptTemplate, chipContent);
+        String prompt = String.format(userPromptTemplate, chipContent);
+        if (isAdcOrDataConverter(chipDataList)) {
+            prompt += """
+
+                    # ADC 报告交付验收（不可省略）
+                    报告中必须出现标题“ADC 时序与接口兼容性”（快速模式可使用同名精简小节），并输出表格：
+                    | 核验项 | 芯片A | 芯片B | 兼容性/差异 | 对 MCU/FPGA/前端的影响与验证动作 |
+                    表格至少覆盖采样触发、采集/建立时间、转换完成（BUSY/EOC/DRDY）、转换/数字滤波延迟、数字接口读出、启动/配置时序。
+                    若原文没有某项，填写“待核对 datasheet”，不可省略、不可编造；任何关键时序或接口差异均不得给出“完全 Pin2Pin”结论。
+                    """;
+        }
+        return prompt;
     }
 
     public static final String QUICK_USER_PROMPT_TEMPLATE = """
