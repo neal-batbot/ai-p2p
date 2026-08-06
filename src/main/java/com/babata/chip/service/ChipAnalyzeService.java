@@ -37,6 +37,7 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -102,6 +103,27 @@ public class ChipAnalyzeService {
      * 注入 system message，强制模型核验采样—转换—读出整条时序链。
      * 依据见 docs/research/adc-timing-comparison.md（ADI 官方技术文章与应用笔记）。
      */
+    private static final String ANALOG_CATEGORY_SYSTEM_PROMPT = """
+
+            # 模拟芯片类别专项兼容性（强制执行）
+            本次资料识别到以下器件类别：%s。
+            除通用封装、引脚和电气参数外，必须为每个识别类别分别输出“{类别}专项兼容性核验”小节和表格：
+            | 核验项 | 芯片A | 芯片B | 兼容性/差异 | 对原理图/PCB/固件/系统的影响与验证动作 |
+            所有项目以 datasheet 原文为准。资料未提供时写“待核对 datasheet”，不得凭产品类别或常识推测；任一硬性配置、时序、稳定性或保护行为不一致时，不得给出“完全 Pin2Pin”结论。
+
+            类别核验项：
+            - 运算放大器/仪表放大器/电流检测放大器：电源与输入共模范围、输出摆幅及负载、闭环增益稳定性、GBW/压摆率、失调/漂移/噪声/偏置电流、CMRR/PSRR、容性负载/相位裕度、使能和启动行为。
+            - 比较器：输入共模与阈值范围、传播延迟（测试 overdrive 条件必须一致）、迟滞、输出级（推挽/开漏）及上拉、电源/逻辑电平、锁存/使能、上电默认态。
+            - DAC：分辨率与架构、参考电压/输出范围、单调性与 INL/DNL、建立时间/毛刺、输出驱动与负载、SPI/I2C/并口协议及时序、上电/复位默认码和 LDAC/同步更新行为。
+            - LDO：VIN/VOUT/最大负载、dropout 的测试电流、输出电容容量/ESR/稳定性、静态电流、纹波抑制、噪声、使能/软启动/启动时间、保护与放电行为。
+            - DC/DC：拓扑与调节方式、VIN/VOUT/持续及峰值电流、开关频率及同步/扩频、外部电感/补偿/反馈网络、软启动/PG、限流/短路/过温保护、开关节点布局和 EMI 风险。
+            - 电压基准：串联/并联拓扑、输出值/初始精度/温漂、噪声、负载或偏置电流范围、压差/工作电压、输出电容稳定性、启动时间和长期漂移。
+            - 模拟开关/多路复用器：开关拓扑与默认态、模拟信号范围相对电源轨、Ron/Ron flatness、漏电、寄生电容/带宽、断开/接通时间、break-before-make、逻辑阈值和电荷注入。
+            - 工业接口收发器（CAN/RS-485/LIN/RS-232 等）：协议与速率、总线共模/故障电压、供电和逻辑 I/O 电平、收发传播延迟、使能/待机/静默/唤醒默认态、终端/失效保护、ESD/浪涌及引脚定义。
+            - 数字隔离器/隔离放大器：隔离等级与认证、工作/浪涌耐压、CMTI、通道方向/默认输出、数据率、传播延迟和通道间 skew、供电域及启动行为。
+            - 栅极驱动器：高低边/隔离拓扑、驱动电压与 source/sink 电流、UVLO 阈值、传播延迟/匹配与死区、bootstrap/电荷泵要求、DESAT/Miller clamp/故障输出、关断默认态与保护时序。
+            """;
+
     private static final String ADC_TIMING_SYSTEM_PROMPT = """
 
             # ADC / 数据转换器专项：时序与配置兼容性（强制执行）
@@ -515,28 +537,54 @@ public class ChipAnalyzeService {
 
     private String buildSystemPrompt(String requestedSystemPrompt, List<ChipPdfResult> chipDataList) {
         String basePrompt = StringUtils.defaultIfBlank(requestedSystemPrompt, DEFAULT_SYSTEM_PROMPT);
-        return isAdcOrDataConverter(chipDataList) ? basePrompt + ADC_TIMING_SYSTEM_PROMPT : basePrompt;
+        List<String> categories = detectAnalogChipCategories(chipDataList);
+        if (categories.isEmpty()) {
+            return basePrompt;
+        }
+        String prompt = basePrompt + String.format(ANALOG_CATEGORY_SYSTEM_PROMPT, String.join("、", categories));
+        return categories.contains("ADC/数据转换器") ? prompt + ADC_TIMING_SYSTEM_PROMPT : prompt;
     }
 
     private boolean isAdcOrDataConverter(List<ChipPdfResult> chipDataList) {
+        return detectAnalogChipCategories(chipDataList).contains("ADC/数据转换器");
+    }
+
+    /**
+     * 从型号和 datasheet 文本识别分析模板。采用可多选的关键词而非单一分类：例如“隔离 CAN 收发器”
+     * 应同时获得接口和隔离两类核验规则。关键词仅用于决定检查清单，绝不能替代 datasheet 证据。
+     */
+    private List<String> detectAnalogChipCategories(List<ChipPdfResult> chipDataList) {
         if (CollectionUtils.isEmpty(chipDataList)) {
-            return false;
+            return List.of();
         }
+        StringBuilder source = new StringBuilder();
         for (ChipPdfResult chipData : chipDataList) {
-            String searchable = StringUtils.defaultString(chipData.getChipModel()) + " "
-                    + StringUtils.defaultString(chipData.getTextContent());
-            String normalized = searchable.toLowerCase();
-            if (normalized.contains("analog-to-digital")
-                    || normalized.contains("a/d converter")
-                    || normalized.contains("adc")
-                    || normalized.contains("模数转换")
-                    || normalized.contains("模數轉換")
-                    || normalized.contains("数据转换器")
-                    || normalized.contains("數據轉換器")) {
-                return true;
+            source.append(' ').append(StringUtils.defaultString(chipData.getChipModel()))
+                    .append(' ').append(StringUtils.defaultString(chipData.getTextContent()));
+        }
+        String text = source.toString().toLowerCase();
+        Set<String> categories = new LinkedHashSet<>();
+        addCategoryIfMatched(categories, text, "ADC/数据转换器", "analog-to-digital", "a/d converter", " adc", "模数转换", "模數轉換", "数据转换器", "數據轉換器");
+        addCategoryIfMatched(categories, text, "DAC", "digital-to-analog", "d/a converter", " dac", "数模转换", "數模轉換");
+        addCategoryIfMatched(categories, text, "运算/仪表/电流检测放大器", "operational amplifier", " op amp", "instrumentation amplifier", "current-sense amplifier", "current sense amplifier", "运算放大器", "仪表放大器", "電流檢測放大器", "电流检测放大器");
+        addCategoryIfMatched(categories, text, "比较器", " comparator", "voltage comparator", "比较器", "比較器");
+        addCategoryIfMatched(categories, text, "LDO", "low-dropout regulator", "low dropout regulator", " ldo", "线性稳压器", "線性穩壓器");
+        addCategoryIfMatched(categories, text, "DC/DC", "switching regulator", "buck converter", "boost converter", "dc/dc", " dc-dc", "降压转换器", "升压转换器", "開關穩壓器");
+        addCategoryIfMatched(categories, text, "电压基准", "voltage reference", "shunt reference", "series reference", "电压基准", "電壓基準");
+        addCategoryIfMatched(categories, text, "模拟开关/多路复用器", "analog switch", "multiplexer", " mux", "模拟开关", "模擬開關", "多路复用", "多路複用");
+        addCategoryIfMatched(categories, text, "工业接口收发器", "can transceiver", "rs-485", "rs485", "lin transceiver", "rs-232", "rs232", "收发器", "收發器");
+        addCategoryIfMatched(categories, text, "数字隔离器/隔离放大器", "digital isolator", "isolated amplifier", "isolation amplifier", "isolated can", "isolated rs", "数字隔离", "數字隔離", "隔离放大器", "隔離放大器");
+        addCategoryIfMatched(categories, text, "栅极驱动器", "gate driver", "gate-driver", "栅极驱动", "柵極驅動");
+        return new ArrayList<>(categories);
+    }
+
+    private void addCategoryIfMatched(Set<String> categories, String text, String category, String... markers) {
+        for (String marker : markers) {
+            if (text.contains(marker)) {
+                categories.add(category);
+                return;
             }
         }
-        return false;
     }
 
     private String buildUserPrompt(List<ChipPdfResult> chipDataList, String userPrompt, String mode) {
@@ -561,7 +609,18 @@ public class ChipAnalyzeService {
             chipContent.append("\n\n");
         }
         String prompt = String.format(userPromptTemplate, chipContent);
-        if (isAdcOrDataConverter(chipDataList)) {
+        List<String> categories = detectAnalogChipCategories(chipDataList);
+        if (!categories.isEmpty()) {
+            prompt += String.format("""
+
+                    # 模拟芯片专项报告交付验收（不可省略）
+                    本次识别类别：%s。
+                    对每个识别类别，必须输出“{类别}专项兼容性核验”小节及下列表格：
+                    | 核验项 | 芯片A | 芯片B | 兼容性/差异 | 对原理图/PCB/固件/系统的影响与验证动作 |
+                    只列该类别真正影响替代的关键项目；原文未给出时填写“待核对 datasheet”，不可省略、不可编造。硬性配置、时序、稳定性、保护行为或接口模式有差异时，均不得给出“完全 Pin2Pin”结论。
+                    """, String.join("、", categories));
+        }
+        if (categories.contains("ADC/数据转换器")) {
             prompt += """
 
                     # ADC 报告交付验收（不可省略）

@@ -25,14 +25,28 @@ class ChipAnalyzeServicePromptTest {
     }
 
     @Test
-    void doesNotApplyAdcCriteriaToNonConverterDatasheets() throws Exception {
+    void addsOpAmpSpecificCriteriaWithoutAdcCriteria() throws Exception {
         ChipPdfResult opAmp = new ChipPdfResult();
         opAmp.setChipModel("OP07");
         opAmp.setTextContent("Precision operational amplifier, low offset voltage");
 
         String prompt = buildUserPrompt(List.of(opAmp));
 
+        assertTrue(prompt.contains("运算/仪表/电流检测放大器"));
+        assertTrue(prompt.contains("模拟芯片专项报告交付验收（不可省略）"));
         assertFalse(prompt.contains("ADC 报告交付验收（不可省略）"));
+    }
+
+    @Test
+    void detectsMultipleProfilesForIsolatedCanTransceiver() throws Exception {
+        ChipPdfResult device = new ChipPdfResult();
+        device.setChipModel("ISO1042");
+        device.setTextContent("Isolated CAN transceiver with digital isolation");
+
+        String prompt = buildUserPrompt(List.of(device));
+
+        assertTrue(prompt.contains("工业接口收发器"));
+        assertTrue(prompt.contains("数字隔离器/隔离放大器"));
     }
 
     private String buildUserPrompt(List<ChipPdfResult> chips) throws Exception {
