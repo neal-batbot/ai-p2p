@@ -56,6 +56,6 @@ public class ArticleController {
 
     @RequestMapping(value = "/blog", method = RequestMethod.GET)
     public String blog(Model model, HttpServletResponse response) {
-        return "blog_list";
+        return "redirect:https://nauucreazyboy.substack.com/";
     }
 }

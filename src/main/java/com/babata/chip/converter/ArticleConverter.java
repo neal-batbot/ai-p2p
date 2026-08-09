@@ -37,7 +37,7 @@ public class ArticleConverter {
             articleDO.setCoverImage(DEFAULT_COVER_IMAGE);
         }
 
-        // articleDTO.setContent(articleDO.getContentMd());
+        articleDTO.setContent(articleDO.getContentMd());
         articleDTO.setContentText(articleDO.getContentText());
 
         articleDTO.setSummary(articleDO.getContentText());

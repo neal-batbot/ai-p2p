@@ -1,0 +1,123 @@
+.ba-article-page {
+    background: #fbf8f1;
+    color: #17141b;
+}
+
+.ba-article-main {
+    padding: 148px 24px 96px;
+}
+
+.ba-article-shell {
+    width: min(840px, 100%);
+    margin: 0 auto;
+}
+
+.ba-article-back,
+.ba-article-eyebrow {
+    font-family: "Outfit", Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+}
+
+.ba-article-back {
+    color: #7b42ca;
+}
+
+.ba-article-eyebrow {
+    margin: 48px 0 16px;
+    color: #7b42ca;
+}
+
+.ba-article-shell h1 {
+    max-width: 760px;
+    margin: 0;
+    font-family: "Noto Sans SC", Arial, sans-serif;
+    font-size: clamp(40px, 6vw, 72px);
+    font-weight: 700;
+    letter-spacing: -.055em;
+    line-height: 1.08;
+}
+
+.ba-article-subtitle {
+    margin: 22px 0 0;
+    color: #69636b;
+    font-size: 20px;
+    line-height: 1.7;
+}
+
+.ba-article-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 18px;
+    margin-top: 28px;
+    color: #69636b;
+    font-family: "Outfit", Arial, sans-serif;
+    font-size: 14px;
+}
+
+.ba-article-meta span + span::before {
+    content: "•";
+    margin-right: 18px;
+    color: #9e98a0;
+}
+
+.ba-article-rule {
+    height: 1px;
+    margin: 40px 0;
+    background: #cbc5bd;
+}
+
+.ba-article-content .editormd-html-preview {
+    padding: 0;
+    color: #312d34;
+    background: transparent;
+    font-family: "Noto Sans SC", Georgia, serif;
+    font-size: 17px;
+    line-height: 1.9;
+}
+
+.ba-article-content .editormd-html-preview h1,
+.ba-article-content .editormd-html-preview h2,
+.ba-article-content .editormd-html-preview h3,
+.ba-article-content .editormd-html-preview h4 {
+    margin-top: 2em;
+    color: #17141b;
+    font-family: "Noto Sans SC", Arial, sans-serif;
+}
+
+.ba-article-content .editormd-html-preview p,
+.ba-article-content .editormd-html-preview ul,
+.ba-article-content .editormd-html-preview ol,
+.ba-article-content .editormd-html-preview blockquote {
+    margin-bottom: 1.35em;
+}
+
+.ba-article-content .editormd-html-preview blockquote {
+    padding: 4px 0 4px 24px;
+    border-left: 3px solid #7b42ca;
+    color: #665e68;
+}
+
+.ba-article-content .editormd-html-preview pre {
+    padding: 20px;
+    border-radius: 4px;
+    background: #17141b;
+}
+
+.ba-article-content .editormd-html-preview img {
+    max-width: 100%;
+    height: auto;
+}
+
+.ba-article-empty {
+    margin: 0;
+    color: #69636b;
+}
+
+@media (max-width: 640px) {
+    .ba-article-main { padding: 116px 20px 64px; }
+    .ba-article-eyebrow { margin-top: 36px; }
+    .ba-article-content .editormd-html-preview { font-size: 16px; }
+}
