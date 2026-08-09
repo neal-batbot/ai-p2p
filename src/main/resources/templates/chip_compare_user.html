@@ -2,8 +2,8 @@
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
 <head>
     <th:block th:replace="layouts/base :: head-common"/>
-    <link rel="stylesheet" th:href="@{/static/css/chip/chip_compare_user.css(v=20260805-4)}">
-    <title>Pin2Pin 芯片替代分析 | CHIP AI</title>
+    <link rel="stylesheet" th:href="@{/static/css/chip/chip_compare_user.css(v=20260809-1)}">
+    <title>P2P Agent｜芯片替代分析 | Barbot</title>
 </head>
 <body>
 <nav th:replace="layouts/base :: navbar"></nav>
@@ -12,8 +12,8 @@
     <section class="workspace">
         <section class="workspace-intro" aria-labelledby="page-title">
             <div class="intro-title-group">
-                <p class="eyebrow"><span></span>CHIP AI · PIN2PIN ANALYSIS</p>
-                <h1 id="page-title">Pin2Pin <em>替代分析</em></h1>
+                <p class="eyebrow"><span></span>P2P AGENT · PIN2PIN ANALYSIS</p>
+                <h1 id="page-title">P2P Agent <em>替代分析</em></h1>
                 <p class="intro-copy">上传两份 PDF 数据表，生成可追溯的引脚、性能与风险对比结论。</p>
             </div>
             <div class="workspace-actions">
@@ -35,7 +35,7 @@
                 <section class="control-section upload-section" aria-labelledby="upload-title">
                     <div class="section-label"><span id="upload-title">芯片数据表</span><small><span class="file-count">0</span> / 5 · PDF</small></div>
                     <label class="upload-dropzone" for="file-upload">
-                        <input type="file" id="file-upload" multiple accept=".pdf">
+                        <input type="file" id="file-upload" multiple accept="application/pdf,.pdf" aria-label="选择 PDF 数据表">
                         <span class="upload-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V3M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg></span>
                         <span class="upload-primary">选择 PDF 数据表</span><span class="upload-secondary">或拖放文件到这里</span>
                     </label>
@@ -126,6 +126,6 @@
 <th:block th:replace="layouts/base :: scripts-common"/>
 <script src="https://cdn.jsdelivr.net/npm/marked@3.0.7/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
-<script src="/static/js/chip/chip_compare_user.js?v=20260805-4"></script>
+<script src="/static/js/chip/chip_compare_user.js?v=20260809-1"></script>
 </body>
 </html>

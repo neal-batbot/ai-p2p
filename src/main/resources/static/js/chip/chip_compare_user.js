@@ -165,9 +165,11 @@ function stopElapsedTimer() {
 }
 
 function updateFileUi() {
+    const isFull = fileCount + uploadPending >= MAX_FILES;
     $('.file-count').text(fileCount);
-    $('.upload-dropzone').toggleClass('is-full', fileCount + uploadPending >= MAX_FILES);
-    $('.upload-primary').text(fileCount + uploadPending >= MAX_FILES ? '已达到文件上限' : '选择 PDF 数据表');
+    $('.upload-dropzone').toggleClass('is-full', isFull);
+    $('#file-upload').prop('disabled', isFull);
+    $('.upload-primary').text(isFull ? '已达到文件上限' : '选择 PDF 数据表');
     $('.action-hint').text(fileCount < MIN_FILES ? `至少上传 ${MIN_FILES} 份数据表后即可开始` : `已就绪：${fileCount} 份数据表`);
     $analyzeButton.prop('disabled', analysisRunning || fileCount < MIN_FILES || fileCount > MAX_FILES);
 }

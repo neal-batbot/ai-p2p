@@ -3,229 +3,122 @@
 <head>
     <th:block th:replace="layouts/base :: head-common"/>
     <link rel="stylesheet" th:href="@{/static/css/font-awesome.min.css}">
-    <link rel="stylesheet" th:href="@{/static/css/blog.css}">
-    <title>博客 | CHIP AI</title>
+    <link rel="stylesheet" th:href="@{/static/css/blog.css(v=20260809-1)}">
+    <title>Blog | Barbot Newsletter</title>
 </head>
 <body>
 <nav th:replace="layouts/base :: navbar"></nav>
 
-<main class="blog-page">
-    <section class="blog-hero">
-        <div class="blog-hero-content">
-            <span class="eyebrow">技术博客</span>
-            <h1>芯片替代与行业洞察</h1>
-            <p>深入了解国产替代、封装工艺与供应链趋势，获取工程师视角的分析解读。</p>
-            <div class="hero-actions">
-                <a href="#blog-list" class="btn btn-primary">浏览文章</a>
-                <a href="#categories" class="btn btn-outline">筛选分类</a>
+<main class="newsletter-page">
+    <section class="newsletter-cover" aria-labelledby="newsletter-title">
+        <div class="cover-orbit" aria-hidden="true"><span></span><span></span><span></span></div>
+        <div class="newsletter-mark" aria-hidden="true">B/</div>
+        <p class="publication-kicker">BARBOT · FIELD NOTES</p>
+        <h1 id="newsletter-title">Barbot<br><em>Newsletter</em></h1>
+        <p class="publication-deck">关于芯片、Agent 与真实工作的持续记录。<br>从一线场景出发，写下产品、方法和正在发生的变化。</p>
+        <p class="publication-byline">By Barbot · Build the better agent.</p>
+
+        <div class="subscribe-panel" aria-label="订阅 Barbot Newsletter">
+            <div>
+                <p>订阅每一期</p>
+                <span>产品进展、芯片实践与 Agent 判断，直接送达。</span>
             </div>
-        </div>
-        <div class="hero-summary">
-            <div class="summary-card">
-                <h3>最新趋势</h3>
-                <p>每周更新热门领域的芯片替代策略与项目案例。</p>
-            </div>
-            <div class="summary-card">
-                <h3>专家观点</h3>
-                <p>结合一线工程师经验输出可执行的选型建议。</p>
-            </div>
-            <div class="summary-card">
-                <h3>行业数据</h3>
-                <p>结合供应链与库存数据建立真实可用的评估模型。</p>
-            </div>
+            <a class="subscribe-button" href="https://nauucreazyboy.substack.com/" target="_blank" rel="noopener noreferrer">订阅 Newsletter <span aria-hidden="true">↗</span></a>
         </div>
     </section>
 
-    <section class="blog-content" id="blog-list">
-        <div class="blog-filters" id="categories"></div>
-        <div class="blog-grid" id="blog-grid">
-            <div class="loading-indicator">
-                <i class="fas fa-spinner"></i> 正在加载博客文章...
-            </div>
+    <section class="newsletter-stream" id="blog-list" aria-labelledby="stream-title">
+        <header class="stream-header">
+            <div><p class="section-kicker">THE LATEST</p><h2 id="stream-title">最新文章</h2></div>
+            <a class="stream-subscribe" href="https://nauucreazyboy.substack.com/" target="_blank" rel="noopener noreferrer">在 Substack 订阅 <span aria-hidden="true">↗</span></a>
+        </header>
+
+        <div class="blog-filters" id="categories" aria-label="文章分类"></div>
+        <div class="post-stream" id="blog-grid" aria-live="polite">
+            <div class="loading-indicator"><i class="fas fa-spinner"></i> 正在加载文章…</div>
         </div>
         <div class="pagination" id="pagination"></div>
     </section>
 </main>
 
 <footer th:replace="layouts/base :: footer"></footer>
-
 <th:block th:replace="layouts/base :: scripts-common"/>
 
 <script>
     $(document).ready(function () {
         let currentPage = 1;
-        let currentCategory = 'all';
+        let currentCategory = '全部';
         const postsPerPage = 9;
+        const categories = ['全部', '产品进展', '芯片实践', 'Agent 方法', '创业笔记', '行业观察'];
 
-        const categories = [
-            {id: 'all', name: '全部'},
-            {id: 'domestic', name: '国产替代'},
-            {id: 'design', name: '设计技术'},
-            {id: 'manufacturing', name: '制造工艺'},
-            {id: 'automotive', name: '汽车电子'},
-            {id: 'ai', name: 'AI芯片'},
-            {id: 'trends', name: '行业趋势'}
-        ];
-
-        function fetchBlogPosts(page = 1, category = 'all') {
-            return new Promise((resolve) => {
-                const params = {
-                    page: page,
-                    pageSize: postsPerPage,
-                    tag: category === 'all' || category === '全部' ? null : category
-                };
-
-                $.ajax({
-                    url: '/api/article/posts',
-                    method: 'GET',
-                    data: params,
-                    dataType: 'json',
-                    success: function (response) {
-                        if (response.status === 0) {
-                            let totalPosts = response.total || 0;
-                            let totalPages = Math.ceil(totalPosts / postsPerPage);
-
-                            resolve({
-                                posts: response.data || [],
-                                totalPosts: totalPosts,
-                                totalPages: totalPages,
-                                currentPage: page,
-                                currentCategory: category
-                            });
-                        } else {
-                            showAlert('获取博客列表失败', 'error');
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        showAlert(`获取博客列表失败: ${xhr.responseJSON?.message || error}`, 'error');
-                    }
-                });
-            });
+        function escapeHtml(value) {
+            return $('<div>').text(value || '').html();
         }
 
-        function showAlert(message, type = 'success') {
-            alert(`${type === 'success' ? '✓' : '✗'} ${message}`);
+        function fetchBlogPosts(page, category) {
+            return $.ajax({
+                url: '/api/article/posts', method: 'GET', dataType: 'json',
+                data: {page: page, pageSize: postsPerPage, tag: category === '全部' ? null : category}
+            });
         }
 
         function renderCategories() {
-            const $filters = $('#categories');
-            $filters.empty();
-
-            categories.forEach(category => {
-                const activeClass = category.name === currentCategory ? 'active' : '';
-                $filters.append(
-                    `<button class="filter-btn ${activeClass}" data-category="${category.id}" data-category-name="${category.name}">${category.name}</button>`
-                );
-            });
+            $('#categories').html(categories.map(function (category) {
+                return `<button class="filter-btn ${category === currentCategory ? 'active' : ''}" type="button" data-category="${category}">${category}</button>`;
+            }).join(''));
         }
 
         function renderBlogPosts(posts) {
-            const $blogGrid = $('#blog-grid');
-
-            if (posts.length === 0) {
-                $blogGrid.html('<div class="no-results"><i class="fas fa-info-circle"></i> 没有找到相关文章</div>');
+            const $stream = $('#blog-grid');
+            if (!posts.length) {
+                $stream.html('<div class="no-results">这一分类暂时还没有文章。<button type="button" class="reset-filter">查看全部文章</button></div>');
                 return;
             }
+            $stream.html(posts.map(function (post, index) {
+                const title = escapeHtml(post.title || '未命名文章');
+                const summary = escapeHtml(post.summary || '点击阅读全文。');
+                const tag = escapeHtml(post.tag || 'BARBOT NOTES');
+                const date = escapeHtml(post.createTime || '');
+                const articleKey = post.enTitle || post.id;
+                const href = `/article/${encodeURIComponent(articleKey)}`;
+                const image = post.coverImage ? `<img src="${escapeHtml(post.coverImage)}" alt="" loading="${index < 2 ? 'eager' : 'lazy'}">` : '<span class="post-placeholder" aria-hidden="true">B/</span>';
+                return `<article class="post-entry ${index === 0 ? 'post-entry-featured' : ''}"><a href="${href}" class="post-link"><div class="post-number">${String((currentPage - 1) * postsPerPage + index + 1).padStart(2, '0')}</div><div class="post-copy"><p class="post-tag">${tag}</p><h3>${title}</h3><p class="post-summary">${summary}</p><div class="post-meta"><span>${date}</span><span>阅读全文 <b aria-hidden="true">↗</b></span></div></div><div class="post-image">${image}</div></a></article>`;
+            }).join(''));
+        }
 
-            $blogGrid.empty();
+        function renderPagination(totalPages) {
+            const $pagination = $('#pagination');
+            if (totalPages <= 1) { $pagination.empty(); return; }
+            let markup = `<button class="page-btn" type="button" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>←</button>`;
+            for (let page = 1; page <= totalPages; page++) {
+                markup += `<button class="page-btn ${page === currentPage ? 'active' : ''}" type="button" data-page="${page}">${page}</button>`;
+            }
+            markup += `<button class="page-btn" type="button" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>→</button>`;
+            $pagination.html(markup);
+        }
 
-            posts.forEach(post => {
-                $blogGrid.append(`
-                    <a href="/article/${post.enTitle}" class="blog-card">
-                        <div class="card-img">
-                            <img src="${post.coverImage}" alt="${post.title}">
-                            <div class="card-tag">${post.tag}</div>
-                        </div>
-                        <div class="card-content">
-                            <h3>${post.title}</h3>
-                            <p>${post.summary}</p>
-                            <div class="card-meta">
-                                <span><i class="far fa-calendar"></i> ${post.createTime}</span>
-                            </div>
-                        </div>
-                    </a>
-                `);
+        function loadBlogData(page, category) {
+            $('#blog-grid').html('<div class="loading-indicator"><i class="fas fa-spinner"></i> 正在加载文章…</div>');
+            fetchBlogPosts(page, category).done(function (response) {
+                if (response.status !== 0) {
+                    $('#blog-grid').html('<div class="no-results">文章加载失败，请稍后重试。<button class="retry-posts" type="button">重新加载</button></div>');
+                    return;
+                }
+                currentPage = page;
+                currentCategory = category;
+                renderCategories();
+                renderBlogPosts(response.data || []);
+                renderPagination(Math.ceil((response.total || 0) / postsPerPage));
+            }).fail(function () {
+                $('#blog-grid').html('<div class="no-results">文章加载失败，请稍后重试。<button class="retry-posts" type="button">重新加载</button></div>');
             });
         }
 
-        function renderPagination(totalPages, currentPage) {
-            const $pagination = $('#pagination');
-            $pagination.empty();
-
-            if (totalPages <= 1) return;
-
-            const prevDisabled = currentPage === 1 ? 'disabled' : '';
-            $pagination.append(`
-                <div class="page-btn ${prevDisabled}" data-page="${currentPage - 1}">
-                    <i class="fas fa-chevron-left"></i>
-                </div>
-            `);
-
-            const startPage = Math.max(1, currentPage - 2);
-            const endPage = Math.min(totalPages, currentPage + 2);
-
-            for (let i = startPage; i <= endPage; i++) {
-                const activeClass = i === currentPage ? 'active' : '';
-                $pagination.append(`
-                    <div class="page-btn ${activeClass}" data-page="${i}">${i}</div>
-                `);
-            }
-
-            if (endPage < totalPages) {
-                $pagination.append(`
-                    <div class="page-btn disabled"><i class="fas fa-ellipsis-h"></i></div>
-                    <div class="page-btn" data-page="${totalPages}">${totalPages}</div>
-                `);
-            }
-
-            const nextDisabled = currentPage === totalPages ? 'disabled' : '';
-            $pagination.append(`
-                <div class="page-btn ${nextDisabled}" data-page="${currentPage + 1}">
-                    <i class="fas fa-chevron-right"></i>
-                </div>
-            `);
-        }
-
-        async function loadBlogData(page = 1, category = 'all') {
-            $('#blog-grid').html('<div class="loading-indicator"><i class="fas fa-spinner"></i> 正在加载博客文章...</div>');
-            try {
-                renderCategories();
-
-                const data = await fetchBlogPosts(page, category);
-                currentPage = data.currentPage;
-                currentCategory = data.currentCategory;
-                renderBlogPosts(data.posts);
-                renderCategories();
-
-                renderPagination(data.totalPages, data.currentPage);
-
-            } catch (error) {
-                console.log(error);
-                $('#blog-grid').html(`
-                    <div class="no-results">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <p>加载失败，请稍后再试</p>
-                        <button class="btn btn-primary" id="retry-btn">重新加载</button>
-                    </div>
-                `);
-
-                $('#retry-btn').click(() => loadBlogData());
-            }
-        }
-
-        loadBlogData();
-
-        $(document).on('click', '.filter-btn', function () {
-            const category = $(this).data('category-name');
-            loadBlogData(1, category);
-        });
-
-        $(document).on('click', '.page-btn:not(.disabled)', function () {
-            const page = $(this).data('page');
-            if (page) {
-                loadBlogData(page, currentCategory);
-            }
-        });
+        $(document).on('click', '.filter-btn', function () { loadBlogData(1, $(this).data('category')); });
+        $(document).on('click', '.page-btn:not(:disabled)', function () { loadBlogData($(this).data('page'), currentCategory); });
+        $(document).on('click', '.reset-filter', function () { loadBlogData(1, '全部'); });
+        $(document).on('click', '.retry-posts', function () { loadBlogData(currentPage, currentCategory); });
+        loadBlogData(1, currentCategory);
     });
 </script>
 </body>

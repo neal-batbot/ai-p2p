@@ -1,276 +1,191 @@
 <!DOCTYPE html>
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <!-- Common head section from base layout -->
     <th:block th:replace="layouts/base :: head-common"/>
-
-    <!-- Page-specific CSS -->
-    <link rel="stylesheet" th:href="@{/static/css/landing.css}">
-
-    <title>CHIP AI - 智能芯片 Pin2Pin 分析平台 | AI驱动的芯片替代解决方案</title>
-    <meta name="description" content="CHIP AI 是基于大语言模型的智能芯片分析平台，提供精准的 Pin2Pin 替代方案，加速硬件设计流程。">
+    <link rel="stylesheet" th:href="@{/static/css/barbot-home.css(v=20260809-2)}">
+    <title>Barbot｜做更好的 Agent，从芯片行业场景开始</title>
+    <meta name="description" content="Barbot 是一家 Agentic AI 产品公司，从芯片行业场景开始，提供 P2P Agent、AI FAE、Coding Agent、AI Agent Wiki 与 Harvey Agents。">
 </head>
+<body class="barbot-home">
+<nav th:replace="layouts/base :: navbar"></nav>
 
-<body>
-    <!-- Navigation Bar from base layout -->
-    <nav th:replace="layouts/base :: navbar"></nav>
-
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-content">
-            <span class="hero-badge">🚀 AI驱动 · 毫秒级响应 · 99.9%准确率</span>
-            <h1>智能芯片 Pin2Pin 分析<br>让芯片替代变得简单</h1>
-            <p>基于大语言模型的AI芯片分析平台，上传PDF数据表即可获得精准的Pin2Pin替代方案。<br>为硬件工程师节省90%的选型时间，加速产品开发周期。</p>
-            <div class="hero-cta">
-                <a th:href="@{/chip/compare}" class="btn-primary">
-                    🎯 免费试用
-                    <span>→</span>
-                </a>
-                <a href="#workflow" class="btn-secondary">了解更多</a>
+<main>
+    <section class="bb-hero" aria-labelledby="hero-title">
+        <div class="bb-shell bb-hero-grid">
+            <div class="bb-hero-copy">
+                <p class="bb-kicker"><span></span> Agentic AI for semiconductor work</p>
+                <h1 id="hero-title">做更好的 Agent<br><em>从芯片行业场景开始</em></h1>
+                <p class="bb-hero-lead">
+                    Barbot 已经将 Agent 应用于芯片行业的真实工作。让它理解专业资料、使用行业工具、
+                    执行复杂流程，并交付可验证的结果。
+                </p>
+                <div class="bb-hero-actions">
+                    <a th:href="@{/chip/compare}" class="bb-button bb-button-primary">
+                        体验 P2P Agent
+                        <span aria-hidden="true">↗</span>
+                    </a>
+                    <a href="#products" class="bb-button bb-button-quiet">查看全部产品</a>
+                </div>
             </div>
-        </div>
-    </section>
 
-    <!-- Features Section -->
-    <section class="features" id="features">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-badge">核心功能</span>
-                <h2>为什么选择 CHIP AI？</h2>
-                <p>结合最前沿的AI技术和深度行业洞察，为您提供最专业的芯片分析服务</p>
-            </div>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">🤖</div>
-                    <h3>AI智能分析</h3>
-                    <p>基于 GPT-4/DeepSeek 等先进大语言模型，自动提取PDF中的关键参数，进行多维度智能对比分析。</p>
+            <div class="bb-agent-board" aria-label="Barbot Agent 工作方式示意">
+                <div class="bb-board-topline">
+                    <span>BARBOT / AGENT 01</span>
+                    <span class="bb-live"><i></i> READY</span>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
-                    <h3>秒级生成报告</h3>
-                    <p>实时流式输出分析结果，无需等待。上传数据表后即可获得详细的Markdown格式对比报告。</p>
+                <div class="bb-board-task">
+                    <span class="bb-board-label">TASK</span>
+                    <strong>完成一份可验证的芯片替代分析</strong>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🎯</div>
-                    <h3>精准替代推荐</h3>
-                    <p>综合电气参数、封装规格、功能特性等多个维度，提供最合适的Pin2Pin替代建议。</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <h3>可视化对比</h3>
-                    <p>自动生成参数对比表格、功能差异分析、应用场景建议，让技术决策更直观。</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">💾</div>
-                    <h3>历史记录管理</h3>
-                    <p>所有分析记录云端保存，支持导出分享。随时查看历史对比，建立您的芯片知识库。</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🔒</div>
-                    <h3>数据安全保障</h3>
-                    <p>企业级数据加密，支持私有化部署。您的技术资料受到最高级别的安全保护。</p>
+                <ol class="bb-board-flow">
+                    <li><span>01</span><div><b>理解资料</b><small>数据手册 · 选型表 · 应用笔记</small></div></li>
+                    <li><span>02</span><div><b>使用工具</b><small>检索 · 解析 · 参数比对</small></div></li>
+                    <li><span>03</span><div><b>验证结论</b><small>证据定位 · 风险检查 · 评测</small></div></li>
+                    <li><span>04</span><div><b>交付结果</b><small>报告 · 建议 · 可追溯证据</small></div></li>
+                </ol>
+                <div class="bb-board-foot">
+                    <img th:src="@{/static/images/harvey-logo.svg}" alt="" aria-hidden="true">
+                    <span>Better agents finish the work.</span>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Workflow Section -->
-    <section class="workflow" id="workflow">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-badge">简单四步</span>
-                <h2>如何使用 CHIP AI？</h2>
-                <p>无需复杂配置，4步即可完成芯片Pin2Pin分析</p>
+    <section class="bb-statement" aria-label="Barbot 公司主张">
+        <div class="bb-shell bb-statement-grid">
+            <p class="bb-section-index">01 / WHY BARBOT</p>
+            <blockquote>
+                未来的竞争，不在于谁拥有 Agent，<br>
+                而在于谁能把 <strong>Agent 做得更好。</strong>
+            </blockquote>
+            <p>
+                Barbot 不做用于创建 Agent 的平台。我们选择有价值的真实工作，直接把 Agent 做成产品，
+                并持续提高它的专业能力、工具使用、任务完成率与结果可靠性。
+            </p>
+        </div>
+    </section>
+
+    <section class="bb-products" id="products" aria-labelledby="products-title">
+        <div class="bb-shell">
+            <div class="bb-section-head">
+                <div>
+                    <p class="bb-section-index">02 / PRODUCTS</p>
+                    <h2 id="products-title">已经投入真实工作的<br>Barbot Agents</h2>
+                </div>
+                <p>从单点任务到复杂工作流，每款产品都对应一项明确的芯片行业工作。</p>
             </div>
-            <div class="workflow-steps">
-                <div class="workflow-step">
-                    <div class="step-number">1</div>
-                    <h3>上传数据表</h3>
-                    <p>上传需要对比的芯片PDF数据表，支持拖拽上传，最多2个文件</p>
-                </div>
-                <div class="workflow-step">
-                    <div class="step-number">2</div>
-                    <h3>AI自动分析</h3>
-                    <p>大语言模型自动提取关键参数，进行多维度智能对比分析</p>
-                </div>
-                <div class="workflow-step">
-                    <div class="step-number">3</div>
-                    <h3>查看报告</h3>
-                    <p>实时生成详细对比报告，包含参数表、功能差异、替代建议</p>
-                </div>
-                <div class="workflow-step">
-                    <div class="step-number">4</div>
-                    <h3>导出分享</h3>
-                    <p>支持Markdown/PDF/Excel等多种格式导出，一键分享团队</p>
+
+            <div class="bb-product-layout">
+                <article class="bb-product bb-product-featured">
+                    <div class="bb-product-meta"><span>01</span><span>AVAILABLE NOW</span></div>
+                    <div class="bb-product-body">
+                        <p class="bb-product-eyebrow">DATASHEET INTELLIGENCE</p>
+                        <h3>P2P Agent</h3>
+                        <p>读取芯片数据手册，完成参数级差异分析、替代关系判断与证据定位，把芯片替代从经验判断变成可验证的工程结论。</p>
+                        <ul>
+                            <li>Pin2Pin 与功能替代判断</li>
+                            <li>参数差异与风险提示</li>
+                            <li>可编辑、可追溯分析报告</li>
+                        </ul>
+                        <a th:href="@{/chip/compare}" class="bb-text-link">进入产品 <span>→</span></a>
+                    </div>
+                    <div class="bb-product-demo" aria-label="P2P Agent 工作界面演示">
+                        <video autoplay muted loop playsinline preload="metadata" aria-label="P2P Agent 工作界面演示">
+                            <source th:src="@{/static/media/p2p-agent-demo.mp4}" type="video/mp4">
+                        </video>
+                    </div>
+                    <div class="bb-product-mark" aria-hidden="true">P2P</div>
+                </article>
+
+                <article class="bb-product bb-product-compact">
+                    <div class="bb-product-meta"><span>02</span><span>AI SUPPORT</span></div>
+                    <h3>AI FAE</h3>
+                    <p>面向芯片原厂与代理商的全天候技术支持 Agent，回答选型与方案问题，并在需要时连接人工服务。</p>
+                    <span class="bb-product-status">产品已就绪</span>
+                </article>
+
+                <article class="bb-product bb-product-compact bb-product-ink">
+                    <div class="bb-product-meta"><span>03</span><span>EMBEDDED</span></div>
+                    <h3>Coding Agent</h3>
+                    <p>面向 MCU/DSP 工程团队，理解芯片文档与 SDK，完成代码生成、工程检索、开发辅助和问题定位。</p>
+                    <span class="bb-product-status">产品已就绪</span>
+                </article>
+
+                <article class="bb-product bb-product-wide">
+                    <div class="bb-product-meta"><span>04</span><span>KNOWLEDGE</span></div>
+                    <div>
+                        <h3>AI Agent Wiki</h3>
+                        <p>把散乱文档编译成可维护的企业知识，让结论可追溯、冲突可管理、变更可审核，为员工提供可信的统一入口。</p>
+                    </div>
+                    <span class="bb-product-status">产品已就绪</span>
+                </article>
+
+                <article class="bb-product bb-product-wide">
+                    <div class="bb-product-meta"><span>05</span><span>AGENT WORKBENCH</span></div>
+                    <div>
+                        <h3>Harvey Agents</h3>
+                        <p>专注芯片行业工作场景，面向复杂任务的 Agent 工作台，连接数据源与工具，执行长任务，并内置专业 Skill。</p>
+                    </div>
+                    <span class="bb-product-status">产品已就绪</span>
+                </article>
+
+                <article class="bb-product bb-product-compact bb-product-violet">
+                    <div class="bb-product-meta"><span>06</span><span>DESIGN</span></div>
+                    <h3>EE Block Diagram</h3>
+                    <p>从系统描述生成结构化电子功能框图，支持可编辑矢量输出与工程化方案表达。</p>
+                    <span class="bb-product-status">产品已就绪</span>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="bb-better" id="approach" aria-labelledby="better-title">
+        <div class="bb-shell bb-better-grid">
+            <div class="bb-better-intro">
+                <p class="bb-section-index">03 / HOW WE BUILD BETTER</p>
+                <h2 id="better-title">“更好的 Agent”<br>必须经得起检验</h2>
+                <p>Barbot 用统一的评测体系持续定位模型、知识与工具链的薄弱环节，让产品从“能回答”走向“能完成工作”。</p>
+            </div>
+            <div class="bb-principles">
+                <article><span>01</span><h3>准确</h3><p>围绕真实芯片任务验证结论，而不是只看语言是否流畅。</p></article>
+                <article><span>02</span><h3>可追溯</h3><p>重要判断回到文档、版本和证据位置，保留完整依据。</p></article>
+                <article><span>03</span><h3>能完成</h3><p>衡量端到端任务完成率，关注交付物是否真正可用。</p></article>
+                <article><span>04</span><h3>有边界</h3><p>识别不确定性、冲突与风险，在必要时主动升级给人。</p></article>
+            </div>
+        </div>
+    </section>
+
+    <section class="bb-foundation" aria-labelledby="foundation-title">
+        <div class="bb-shell bb-foundation-grid">
+            <div>
+                <p class="bb-section-index">04 / INDUSTRY FOUNDATION</p>
+                <h2 id="foundation-title">Agent 的上限，来自对行业工作的理解</h2>
+            </div>
+            <div class="bb-foundation-copy">
+                <p>Barbot 长期处理数据手册、应用笔记、选型资料、汽车电子 Teardown 与嵌入式 SDK，把真实工程经验沉淀为 Agent 可以使用的知识、工具与评测。</p>
+                <div class="bb-domain-list" aria-label="覆盖领域">
+                    <span>芯片选型</span><span>VAVE</span><span>Pin2Pin</span><span>FAE</span>
+                    <span>Coding Agent</span><span>汽车电子</span><span>企业知识</span><span>Agent 评测</span>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Pricing Section -->
-    <section class="pricing" id="pricing">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-badge">灵活定价</span>
-                <h2>选择适合您的方案</h2>
-                <p>无论个人开发者还是企业团队，都能找到合适的方案</p>
+    <section class="bb-cta" aria-labelledby="cta-title">
+        <div class="bb-shell bb-cta-inner">
+            <div>
+                <p class="bb-section-index">START WITH REAL WORK</p>
+                <h2 id="cta-title">把一件有价值的工作，<br>交给更好的 Agent。</h2>
             </div>
-            <div class="pricing-grid">
-                <div class="pricing-card">
-                    <h3>免费版</h3>
-                    <div class="pricing-price">¥0</div>
-                    <div class="pricing-period">永久免费</div>
-                    <ul class="pricing-features">
-                        <li>每日 3 次分析额度</li>
-                        <li>基础芯片参数对比</li>
-                        <li>Markdown 报告导出</li>
-                        <li>7天历史记录保存</li>
-                        <li>社区技术支持</li>
-                    </ul>
-                    <a th:href="@{/login}" class="pricing-btn">免费注册</a>
-                </div>
-
-                <div class="pricing-card featured">
-                    <span class="pricing-badge">最受欢迎</span>
-                    <h3>专业版</h3>
-                    <div class="pricing-price">¥299</div>
-                    <div class="pricing-period">每月</div>
-                    <ul class="pricing-features">
-                        <li>每日 50 次分析额度</li>
-                        <li>高级AI分析引擎</li>
-                        <li>多格式报告导出</li>
-                        <li>无限历史记录</li>
-                        <li>优先技术支持</li>
-                        <li>团队协作功能</li>
-                    </ul>
-                    <a th:href="@{/payment}" class="pricing-btn">立即购买</a>
-                </div>
-
-                <div class="pricing-card">
-                    <h3>企业版</h3>
-                    <div class="pricing-price">定制</div>
-                    <div class="pricing-period">按需报价</div>
-                    <ul class="pricing-features">
-                        <li>无限分析次数</li>
-                        <li>私有化部署支持</li>
-                        <li>API接口对接</li>
-                        <li>定制化功能开发</li>
-                        <li>专属客户经理</li>
-                        <li>SLA服务保障</li>
-                    </ul>
-                    <a th:href="@{/about}" class="pricing-btn">联系销售</a>
-                </div>
+            <div class="bb-cta-actions">
+                <a th:href="@{/chip/compare}" class="bb-button bb-button-light">立即体验 P2P Agent <span>↗</span></a>
+                <a th:href="@{/about}" class="bb-cta-link">了解 Barbot →</a>
             </div>
         </div>
     </section>
+</main>
 
-    <!-- Blog Section -->
-    <section class="blog-section" id="blog">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-badge">技术洞察</span>
-                <h2>最新文章</h2>
-                <p>探索芯片分析、AI技术、硬件设计的最新趋势和实践经验</p>
-            </div>
-            <div class="blog-grid" id="blog-grid">
-                <!-- Blog posts will be loaded dynamically via AJAX -->
-                <div class="loading-indicator">
-                    <p>正在加载最新文章...</p>
-                </div>
-            </div>
-
-            <div class="blog-cta">
-                <a th:href="@{/blog}" class="btn-secondary">查看所有文章 →</a>
-            </div>
-        </div>
-    </section>
-
-    <!-- CTA Section -->
-    <section class="cta-section">
-        <div class="container">
-            <h2>准备好体验AI驱动的芯片分析了吗？</h2>
-            <p>立即注册，获取3次免费分析额度，感受前所未有的效率提升</p>
-            <a th:href="@{/chip/compare}" class="btn-primary">
-                🚀 立即开始免费试用
-            </a>
-        </div>
-    </section>
-
-    <!-- Footer from base layout -->
-    <footer th:replace="layouts/base :: footer"></footer>
-
-    <!-- Common Scripts -->
-    <th:block th:replace="layouts/base :: scripts-common"/>
-
-    <!-- Page-specific Scripts -->
-    <script th:src="@{/static/js/pages/landing.js}"></script>
-
-    <!-- Blog Posts Loading Script -->
-    <script th:inline="javascript">
-        $(document).ready(function () {
-            // Fetch and render latest blog posts
-            function fetchAndRenderLatestPosts() {
-                $.ajax({
-                    url: '/api/article/posts',
-                    method: 'GET',
-                    data: {
-                        page: 1,
-                        pageSize: 6
-                    },
-                    dataType: 'json',
-                    success: function (response) {
-                        if (response.status === 0 && response.data && response.data.length > 0) {
-                            renderBlogPosts(response.data);
-                        } else {
-                            $('#blog-grid').html('<div class="no-results"><p>暂无最新文章</p></div>');
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        $('#blog-grid').html('<div class="no-results"><p>加载文章失败，请刷新重试</p></div>');
-                        console.error('获取最新文章失败:', error);
-                    }
-                });
-            }
-
-            // Render blog posts to the grid
-            function renderBlogPosts(posts) {
-                const $blogGrid = $('#blog-grid');
-                $blogGrid.empty();
-
-                // Only display first 3 posts for homepage
-                const displayPosts = posts.slice(0, 3);
-
-                displayPosts.forEach(post => {
-                    const postUrl = /*[[@{/article/}]]*/ '/article/' + (post.enTitle || post.id);
-                    const coverImage = post.coverImage || 'https://images.unsplash.com/photo-1581091226033-d5c48150dbaa?q=80&w=1000';
-                    const blogTag = post.tag || '技术';
-                    const createTime = post.createTime || '未知日期';
-                    const summary = post.summary || '暂无摘要';
-
-                    $blogGrid.append(`
-                        <div class="blog-card" onclick="window.location.href='${postUrl}'">
-                            <div class="blog-image" style="background: linear-gradient(135deg, var(--accent-orange), var(--accent-blue)), url('${coverImage}') center/cover;">
-                                <!-- Cover image as background -->
-                            </div>
-                            <div class="blog-content">
-                                <div class="blog-meta">
-                                    <span class="blog-tag">${blogTag}</span>
-                                    <span>${createTime}</span>
-                                </div>
-                                <h3>${post.title}</h3>
-                                <p>${summary}</p>
-                                <a href="${postUrl}" class="blog-read-more">
-                                    阅读全文 →
-                                </a>
-                            </div>
-                        </div>
-                    `);
-                });
-            }
-
-            // Load posts on page ready
-            fetchAndRenderLatestPosts();
-        });
-    </script>
+<footer th:replace="layouts/base :: footer"></footer>
+<th:block th:replace="layouts/base :: scripts-common"/>
 </body>
 </html>

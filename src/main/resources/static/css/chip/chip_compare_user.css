@@ -46,9 +46,10 @@ h1 em { color: var(--green); font-style: normal; }
 .upload-section { padding-top: 18px; }
 .section-label { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 10px; color: var(--ink); font-size: 13px; font-weight: 700; }
 .section-label small { color: var(--ink-soft); font-family: var(--mono); font-size: 10px; font-weight: 400; }
-.upload-dropzone { min-height: 108px; padding: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; border: 1px dashed var(--line-strong); border-radius: 6px; background: #f8faf6; color: var(--ink-soft); cursor: pointer; text-align: center; transition: border-color .2s ease, background .2s ease, transform .2s ease; }
+.upload-dropzone { position: relative; overflow: hidden; min-height: 108px; padding: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; border: 1px dashed var(--line-strong); border-radius: 6px; background: #f8faf6; color: var(--ink-soft); cursor: pointer; text-align: center; transition: border-color .2s ease, background .2s ease, transform .2s ease; }
 .upload-dropzone:hover, .upload-dropzone:focus-within { border-color: var(--green); background: var(--green-pale); transform: translateY(-1px); }
-.upload-dropzone input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.upload-dropzone input { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.upload-dropzone.is-full input { pointer-events: none; cursor: not-allowed; }
 .upload-symbol { width: 30px; height: 30px; display: grid; place-items: center; margin-bottom: 4px; border-radius: 5px; color: var(--green); background: var(--green-pale); }
 .upload-symbol svg { width: 17px; height: 17px; }
 .upload-primary { color: var(--ink); font-size: 13px; font-weight: 700; }
