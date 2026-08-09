@@ -2,132 +2,79 @@
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
 <head>
     <th:block th:replace="layouts/base :: head-common"/>
-    <link rel="stylesheet" th:href="@{/static/css/about.css}">
-    <title>关于 CHIP AI</title>
+    <link rel="stylesheet" th:href="@{/static/css/barbot-about.css}">
+    <title>关于 Barbot｜把 Agent 做得更好</title>
+    <meta name="description" content="Barbot 是一家 Agentic AI 产品公司，从芯片行业场景开始，直接打造能够完成真实工作的 Agent。">
 </head>
-<body>
+<body class="barbot-about">
 <nav th:replace="layouts/base :: navbar"></nav>
 
-<main class="about-page">
-    <section class="about-hero">
-        <div class="about-hero-grid">
-            <div class="hero-copy">
-                <span class="eyebrow">关于我们</span>
-                <h1>让芯片替代更可靠、更高效</h1>
-                <p>
-                    CHIP AI 汇聚行业经验与大模型能力，为工程团队提供高可信的 Pin2Pin 替代分析、
-                    数据表解析与成本评估。我们相信，芯片选择的每一步都应该可追溯、可协作、可落地。
-                </p>
-                <div class="hero-metrics">
-                    <div>
-                        <h3>4 万+</h3>
-                        <span>芯片型号库</span>
-                    </div>
-                    <div>
-                        <h3>12 秒</h3>
-                        <span>平均生成报告</span>
-                    </div>
-                    <div>
-                        <h3>98%</h3>
-                        <span>工程师满意度</span>
-                    </div>
-                </div>
+<main>
+    <section class="ba-hero">
+        <div class="ba-shell ba-hero-grid">
+            <p class="ba-index">ABOUT BARBOT / 01</p>
+            <div>
+                <h1>我们相信，最好的 Agent<br>本身就是一款产品。</h1>
+                <p class="ba-lead">Barbot 不做用于创建 Agent 的平台。我们选择真实、有价值的行业工作，直接打造能够理解专业知识、使用工具并完成任务的 Agent。</p>
             </div>
-            <div class="hero-card">
-                <div class="hero-card-header">
-                    <h2>CHIP AI 能做什么？</h2>
-                    <p>覆盖数据表解析、替代推荐、风险对比三大场景。</p>
-                </div>
-                <ul class="hero-card-list">
-                    <li>
-                        <span>📄</span>
-                        <div>
-                            <h4>数据表智能拆解</h4>
-                            <p>自动识别关键参数、封装与引脚定义。</p>
-                        </div>
-                    </li>
-                    <li>
-                        <span>🔍</span>
-                        <div>
-                            <h4>替代方案推荐</h4>
-                            <p>结合性能指标与供应链可用性给出建议。</p>
-                        </div>
-                    </li>
-                    <li>
-                        <span>📈</span>
-                        <div>
-                            <h4>差异可视化报告</h4>
-                            <p>一键生成可分享的比较分析与风险提示。</p>
-                        </div>
-                    </li>
+        </div>
+    </section>
+
+    <section class="ba-thesis">
+        <div class="ba-shell ba-thesis-grid">
+            <p class="ba-index">OUR THESIS / 02</p>
+            <div class="ba-quote">
+                <p>每个人都会拥有 Agent。</p>
+                <p>真正的竞争，是谁能把 Agent 做得更好。</p>
+            </div>
+            <p class="ba-copy">因此，Barbot 关注的不是制造更多 Agent，而是持续提高每一款 Agent 的专业能力、工具使用、任务完成率、证据可靠性和安全边界。</p>
+        </div>
+    </section>
+
+    <section class="ba-start">
+        <div class="ba-shell ba-start-grid">
+            <div>
+                <p class="ba-index">WHERE WE START / 03</p>
+                <h2>从芯片行业的<br>真实场景开始</h2>
+            </div>
+            <div class="ba-start-copy">
+                <p>芯片工作专业、复杂，并且高度依赖数据手册、应用笔记、选型资料与工程经验。这正是检验 Agent 是否真正有用的地方。</p>
+                <ul>
+                    <li><span>01</span>芯片选型与 Pin2Pin 替代</li>
+                    <li><span>02</span>采购、VAVE 与器件评估</li>
+                    <li><span>03</span>FAE 技术支持与方案问答</li>
+                    <li><span>04</span>面向 MCU / DSP 的 Coding Agent</li>
+                    <li><span>05</span>企业知识治理与行业数据建设</li>
                 </ul>
             </div>
         </div>
     </section>
 
-    <section class="about-values">
-        <div class="section-header">
-            <span class="eyebrow">价值主张</span>
-            <h2>把复杂的芯片决策变成可执行的行动</h2>
-            <p>我们帮助研发团队更快、更准地做出替代决策。</p>
-        </div>
-        <div class="values-grid">
-            <article>
-                <h3>数据驱动</h3>
-                <p>融合数据表、器件库与历史项目经验，建立可验证的判断链路。</p>
-            </article>
-            <article>
-                <h3>工程视角</h3>
-                <p>以工程师场景为核心，呈现关键参数差异和风险提示。</p>
-            </article>
-            <article>
-                <h3>协同闭环</h3>
-                <p>从分析到归档完整记录，支持跨团队共享与复盘。</p>
-            </article>
-        </div>
-    </section>
-
-    <section class="about-timeline">
-        <div class="section-header">
-            <span class="eyebrow">发展历程</span>
-            <h2>持续打磨的产品节奏</h2>
-            <p>通过迭代与行业合作，让 AI 更懂芯片替代。</p>
-        </div>
-        <div class="timeline-grid">
-            <div class="timeline-item">
-                <span class="timeline-year">2023</span>
-                <h3>平台内测</h3>
-                <p>联合 12 家芯片原厂完成首轮模型训练。</p>
-            </div>
-            <div class="timeline-item">
-                <span class="timeline-year">2024</span>
-                <h3>企业版上线</h3>
-                <p>推出团队协作与私有部署能力。</p>
-            </div>
-            <div class="timeline-item">
-                <span class="timeline-year">2025</span>
-                <h3>行业生态</h3>
-                <p>开放数据接口与生态伙伴共建行业标准。</p>
+    <section class="ba-standard">
+        <div class="ba-shell">
+            <p class="ba-index">OUR STANDARD / 04</p>
+            <h2>不是“能回答”，而是“能完成工作”</h2>
+            <div class="ba-standard-grid">
+                <article><b>准确性</b><p>重要结论符合技术资料与真实业务条件。</p></article>
+                <article><b>证据链</b><p>关键判断能够回到来源、版本与具体位置。</p></article>
+                <article><b>完成率</b><p>从理解任务到交付结果，完成完整工作闭环。</p></article>
+                <article><b>安全边界</b><p>识别不确定性与风险，在必要时交给专业人员。</p></article>
             </div>
         </div>
     </section>
 
-    <section class="about-contact">
-        <div class="contact-card">
+    <section class="ba-cta">
+        <div class="ba-shell ba-cta-grid">
             <div>
-                <h2>准备好开始了吗？</h2>
-                <p>联系我们获取企业试用、技术支持或联合方案。</p>
+                <p class="ba-index">BUILD THE BETTER AGENT</p>
+                <h2>把一件有价值的工作，<br>交给更好的 Agent。</h2>
             </div>
-            <div class="contact-actions">
-                <a th:href="@{/chip}" class="btn btn-primary">开始分析</a>
-                <a href="mailto:contact@chipai.com" class="btn btn-outline">联系团队</a>
-            </div>
+            <a th:href="@{/chip/compare}" class="ba-button">体验 P2P Agent <span>↗</span></a>
         </div>
     </section>
 </main>
 
 <footer th:replace="layouts/base :: footer"></footer>
-
 <th:block th:replace="layouts/base :: scripts-common"/>
 </body>
 </html>

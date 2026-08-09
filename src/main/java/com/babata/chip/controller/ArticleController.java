@@ -29,6 +29,9 @@ public class ArticleController {
     @RequestMapping(value = "/article/{enTitle}", method = RequestMethod.GET)
     public String article(@PathVariable String enTitle, Model model, HttpServletResponse response) {
         ArticleDO articleDO = articleRepository.getArticleByEnTitle(enTitle);
+        if (articleDO == null && enTitle.matches("\\d+")) {
+            articleDO = articleRepository.getArticleById(Integer.parseInt(enTitle));
+        }
         if (articleDO == null) {
             response.setStatus(ErrorCodeEnum.NOT_FOUND.getCode());
             return "404";
@@ -53,6 +56,6 @@ public class ArticleController {
 
     @RequestMapping(value = "/blog", method = RequestMethod.GET)
     public String blog(Model model, HttpServletResponse response) {
-        return "blog_list";
+        return "redirect:https://nauucreazyboy.substack.com/";
     }
 }
