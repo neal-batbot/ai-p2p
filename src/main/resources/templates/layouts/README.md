@@ -1,6 +1,6 @@
 # Thymeleaf Layout System Documentation
 
-This directory contains the master layout templates for the CHIP AI application. The layout system provides reusable fragments for consistent site-wide styling and navigation.
+This directory contains the master layout templates for the P2P Agent application. The layout system provides reusable fragments for consistent site-wide styling and navigation.
 
 ## Table of Contents
 - [Overview](#overview)
@@ -64,7 +64,7 @@ Contains meta tags, Anthropic brand fonts, and core CSS files.
 
 **Variables:**
 - `${pageTitle}` - Set this variable to customize the page title
-  - Example: `model.addAttribute("pageTitle", "芯片分析 - CHIP AI");`
+  - Example: `model.addAttribute("pageTitle", "芯片分析 - P2P Agent");`
 
 ---
 
@@ -73,7 +73,7 @@ Contains meta tags, Anthropic brand fonts, and core CSS files.
 A fully responsive navigation bar with desktop and mobile views.
 
 **Features:**
-- Logo with emoji icon (🔬) and "CHIP AI" text
+- Logo with emoji icon (🔬) and "P2P Agent" text
 - Desktop horizontal menu
 - Mobile hamburger menu
 - User authentication state (logged in/logged out)
@@ -171,7 +171,7 @@ Create a new page that uses the full layout system:
     <main>
         <!-- Your page content -->
         <section class="hero">
-            <h1>欢迎使用 CHIP AI</h1>
+            <h1>欢迎使用 P2P Agent</h1>
             <p>智能芯片分析平台</p>
         </section>
     </main>
@@ -195,7 +195,7 @@ Set a custom page title by passing a variable from the controller:
 ```java
 @GetMapping("/chip")
 public String chipPage(Model model) {
-    model.addAttribute("pageTitle", "Pin2Pin分析 - CHIP AI");
+    model.addAttribute("pageTitle", "Pin2Pin分析 - P2P Agent");
     return "chip";
 }
 ```
@@ -424,7 +424,7 @@ src/main/resources/
 
 2. **Set page titles in controller**
    - Pass `pageTitle` attribute for custom titles
-   - Fallback title is "CHIP AI - 智能芯片分析平台"
+   - Fallback title is "P2P Agent - 智能芯片分析平台"
 
 3. **Load common scripts first**
    - Use `th:replace="layouts/base :: scripts-common"` before page-specific JS
