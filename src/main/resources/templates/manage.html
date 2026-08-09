@@ -942,6 +942,22 @@
     <!-- 主内容区域 -->
     <div class="main-content">
         <div class="dashboard-container">
+            <div class="card" id="booking-dashboard">
+                <div class="section-header">
+                    <div class="section-title"><i class="fas fa-calendar-check"></i> 预约会议</div>
+                    <a class="btn btn-primary" href="/booking" target="_blank">打开预约页</a>
+                </div>
+                <div class="stats-grid" style="margin-bottom: 1.5rem;">
+                    <div class="stat-card"><h3>全部预约</h3><div class="value" id="booking-total">—</div></div>
+                    <div class="stat-card"><h3>待确认</h3><div class="value" id="booking-pending">—</div></div>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>预约时间</th><th>联系人</th><th>公司</th><th>会议背景</th><th>状态</th><th>操作</th></tr></thead>
+                        <tbody id="booking-rows"><tr><td colspan="6">正在加载预约…</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
             <!-- 统计卡片 -->
             <div class="stats-grid">
                 <div class="stat-card">
@@ -1107,6 +1123,27 @@
                     this.classList.add('active');
                 });
             });
+
+            const bookingLabels = {PENDING: '待确认', CONFIRMED: '已确认', COMPLETED: '已完成', CANCELLED: '已取消'};
+            const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
+            const loadBookings = async () => {
+                const rows = document.getElementById('booking-rows');
+                try {
+                    const response = await fetch('/api/admin/bookings');
+                    const result = await response.json();
+                    if (!response.ok || result.status !== 0) throw new Error(result.message || '无法加载预约。');
+                    document.getElementById('booking-total').textContent = result.data.total;
+                    document.getElementById('booking-pending').textContent = result.data.pending;
+                    rows.innerHTML = result.data.bookings.length ? result.data.bookings.map((booking) => `
+                        <tr><td>${escapeHtml(booking.meetingAt?.replace('T', ' ') || '')}</td><td><strong>${escapeHtml(booking.name)}</strong><br><small>${escapeHtml(booking.email)}</small></td><td>${escapeHtml(booking.company || '—')}</td><td>${escapeHtml(booking.topic)}</td><td><span class="status status-published">${bookingLabels[booking.status] || booking.status}</span></td><td><select class="form-control booking-status" data-id="${booking.id}">${Object.entries(bookingLabels).map(([key, label]) => `<option value="${key}" ${key === booking.status ? 'selected' : ''}>${label}</option>`).join('')}</select></td></tr>`).join('') : '<tr><td colspan="6">暂无预约会议。</td></tr>';
+                    document.querySelectorAll('.booking-status').forEach((select) => select.addEventListener('change', async () => {
+                        const response = await fetch(`/api/admin/bookings/${select.dataset.id}/status?status=${select.value}`, {method: 'PUT'});
+                        if (!response.ok) alert('状态更新失败，请重试。');
+                        loadBookings();
+                    }));
+                } catch (error) { rows.innerHTML = `<tr><td colspan="6">${escapeHtml(error.message)}</td></tr>`; }
+            };
+            loadBookings();
 
             // 操作按钮点击效果
             const actionButtons = document.querySelectorAll('.action-btn');
