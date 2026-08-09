@@ -23,7 +23,7 @@ public class ChipController {
 
     @RequestMapping("/application-selection")
     public String applicationSelection(Model model) {
-        model.addAttribute("pageTitle", "应用选型 | CHIP AI");
+        model.addAttribute("pageTitle", "应用选型 | P2P Agent");
         return "application_selection";
     }
 

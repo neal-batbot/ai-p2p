@@ -68,7 +68,7 @@ function initScrollAnimations() {
  * Displays branded message in browser console
  */
 function showConsoleEasterEgg() {
-    console.log('%c🚀 CHIP AI - Powered by Claude', 'font-size: 20px; color: #d97757; font-weight: bold;');
+    console.log('%c🚀 P2P Agent - Powered by Claude', 'font-size: 20px; color: #d97757; font-weight: bold;');
     console.log('%c欢迎探索我们的产品！有任何问题欢迎联系我们。', 'font-size: 14px; color: #787773;');
 }
 
