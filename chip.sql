@@ -6,6 +6,21 @@ DATABASE chip CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE
 chip;
 
+CREATE TABLE IF NOT EXISTS `meeting_booking`
+(
+    `id`          BIGINT       NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    `name`        VARCHAR(128) NOT NULL,
+    `email`       VARCHAR(256) NOT NULL,
+    `company`     VARCHAR(256)          DEFAULT NULL,
+    `topic`       TEXT         NOT NULL,
+    `meeting_at`  DATETIME     NOT NULL,
+    `status`      VARCHAR(32)  NOT NULL DEFAULT 'PENDING',
+    `create_time` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `modify_time` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    KEY `idx_meeting_at` (`meeting_at`),
+    KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 DROP TABLE IF EXISTS `chip_compare_record`;
 CREATE TABLE `chip_compare_record`
 (

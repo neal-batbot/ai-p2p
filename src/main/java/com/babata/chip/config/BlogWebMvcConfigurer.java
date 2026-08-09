@@ -37,6 +37,7 @@ public class BlogWebMvcConfigurer implements WebMvcConfigurer {
         registry.addInterceptor(getLoginInterceptor()).addPathPatterns("/manage", "/album", "/video", "api/**", "/api/**/**", "/api/**/**/**",
                         "/files/private/**", "/article/add", "/article/*/*/edit", "/admin/**", "/admin/add", "/admin/*/edit", "/chip/compare",
                         "/chip/compare/admin", "/api/chip/**", "/chat", "/ai/chat", "/study", "/chip/**", "/payment")
+                .excludePathPatterns("/api/booking")
                 .excludePathPatterns("/api/admin/authentication", "/api/article/retrieval", "/api/files/public", "/api/comment", "/api/video", "/api/article/**");
     }
 }
