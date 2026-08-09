@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{layouts/base :: head-common}"></th:block>
+    <title>预约会议 | Barbot</title>
+    <link rel="stylesheet" th:href="@{/static/css/booking.css}">
+</head>
+<body class="booking-page">
+<nav th:replace="~{layouts/base :: navbar}"></nav>
+
+<main class="booking-main">
+    <section class="booking-intro">
+        <div class="booking-wrap booking-intro-grid">
+            <div>
+                <p class="booking-kicker">BOOK A WORKING SESSION / 30 MIN</p>
+                <h1>把具体问题<br>带到会议里。</h1>
+                <p class="booking-lead">预约一场 30 分钟的工作会议。我们会围绕芯片选型、Pin2Pin 替代、工程知识与 Agent 落地，先把问题讲清楚。</p>
+            </div>
+            <aside class="booking-rules" aria-label="预约规则">
+                <span>01</span>
+                <strong>工作时段</strong>
+                <p>周一至周五<br>10:00 — 18:00</p>
+                <small>中国标准时间 · 每场 30 分钟</small>
+            </aside>
+        </div>
+    </section>
+
+    <section class="booking-workspace">
+        <div class="booking-wrap booking-layout">
+            <div class="booking-picker">
+                <div class="booking-section-head">
+                    <span>01</span>
+                    <div><p>CHOOSE A TIME</p><h2>选择时间</h2></div>
+                </div>
+                <div class="booking-days" id="booking-days" aria-label="可预约日期"></div>
+                <div class="booking-time-heading"><span>02</span><p id="selected-day-label">请选择日期</p></div>
+                <div class="booking-times" id="booking-times" aria-live="polite"></div>
+                <p class="booking-time-note">仅显示未来 10 个工作日。提交后，Barbot 会通过邮件确认会议安排。</p>
+            </div>
+
+            <form class="booking-form" id="booking-form" novalidate>
+                <div class="booking-section-head">
+                    <span>03</span>
+                    <div><p>YOUR CONTEXT</p><h2>留下背景</h2></div>
+                </div>
+                <label>姓名<input name="name" autocomplete="name" required placeholder="怎么称呼你？"></label>
+                <div class="booking-two-col">
+                    <label>工作邮箱<input name="email" type="email" autocomplete="email" required placeholder="name@company.com"></label>
+                    <label>公司 / 团队<input name="company" autocomplete="organization" placeholder="选填"></label>
+                </div>
+                <label>这次想讨论什么？<textarea name="topic" required placeholder="例如：评估某型号的国产替代方案，或讨论 MCU SDK Coding Agent 的接入方式。"></textarea></label>
+                <input type="hidden" name="date" id="booking-date">
+                <input type="hidden" name="time" id="booking-time">
+                <button type="submit" class="booking-submit">提交预约请求 <span>↗</span></button>
+                <p class="booking-privacy">提交即表示你同意 Barbot 使用这些信息联系你安排会议。</p>
+                <p class="booking-feedback" id="booking-feedback" role="status"></p>
+            </form>
+        </div>
+    </section>
+</main>
+
+<footer th:replace="~{layouts/base :: footer}"></footer>
+<th:block th:replace="~{layouts/base :: scripts-common}"></th:block>
+<script th:src="@{/static/js/booking.js}"></script>
+</body>
+</html>
